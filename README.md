@@ -19,7 +19,12 @@
 - 説明
 
 microCMSのAPI通信公式モジュール  
-microcms-js-sdk  
+「microcms-js-sdk」  
 TypeScriptの型  
 - MicroCMSListResponse<T>: APIからの返却データ
 - MicroCMSListContent: microCMSに登録されているデータ
+
+クライアントサイドでenv参照  
+https://nextjs.org/docs/api-reference/next.config.js/environment-variables  
+
+useRouterはuseEffectの中で使う

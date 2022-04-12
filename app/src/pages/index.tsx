@@ -1,51 +1,36 @@
 import React from 'react';
-import type { NextPage, InferGetStaticPropsType } from 'next';
-import { MicroCMSListResponse } from 'microcms-js-sdk';
-import styled from 'styled-components';
-import TSchedule from '~/types/Schedule';
+import type { NextPage } from 'next';
+import { useRouter } from 'next/router';
+import useSWR from 'swr';
 import Head from 'next/head';
-import DefaultLayout from '~/components/layouts/Default';
-import CalendarMonth from '~/components/Calendar/month';
-import ScheduleList from '~/components/ScheduleList';
-import Modal from '~/components/Modal';
-import microCMSClient from '~/utils/microCMSClient';
+import type { TToday } from '~/pages/api/today';
 
-type Props = InferGetStaticPropsType<typeof getStaticProps>;
+const fetcher = (endpoint: string): Promise<TToday> => fetch(endpoint).then(res => res.json());
 
-export async function getStaticProps() {
-  const schedule = await microCMSClient.get<MicroCMSListResponse<TSchedule>>({
-    endpoint: 'schedule'
-  });
+const Home: NextPage = () => {
+  const router = useRouter();
+  const { data, error } = useSWR('/api/today', fetcher);
 
-  return {
-    props: {
-      schedule
+  React.useEffect(() => {
+    let redirectURL = '';
+    if (error) {
+      const today = new Date();
+      redirectURL = `/calendar/${today.getFullYear()}/${today.getMonth() + 1}`;
     }
-  };
-}
+    if (data) {
+      redirectURL = `/calendar/${data.year}/${data.month}`;
+    }
 
-const Home: NextPage<Props> = ({ schedule }) => {
-  const [isModalShow, setIsModalShow] = React.useState(false);
+    if (redirectURL !== '') {
+      router.replace(redirectURL);
+    }
+  }, [router, data, error]);
 
   return (
-    <DefaultLayout>
-      <Head>
-        <title>カレンダー</title>
-      </Head>
-      <StyledContainer>
-        <CalendarMonth schedule={schedule.contents} setIsModalShow={setIsModalShow} />
-        <ScheduleList data={schedule.contents} />
-        <Modal isShow={isModalShow} setIsShow={setIsModalShow}>
-          予定登録
-        </Modal>
-      </StyledContainer>
-    </DefaultLayout>
+    <>
+      <Head>カレンダー</Head>
+    </>
   );
 };
-
-const StyledContainer = styled.div`
-  display: flex;
-  align-items: stretch;
-`;
 
 export default Home;

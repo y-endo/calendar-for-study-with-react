@@ -1,17 +1,19 @@
 import styled from 'styled-components';
 
 type ButtonProps = {
-  color?: string;
+  color?: 'primary' | 'secondary';
+  size?: 'large' | 'small';
 };
 
 export const Button = styled.button<ButtonProps>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
-  padding: 10px 15px;
+  font-size: 1.6rem;
+  padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  background-color: #fff;
   cursor: pointer;
   transition: filter 0.3s ease-out;
 
@@ -29,6 +31,20 @@ export const Button = styled.button<ButtonProps>`
       color: #000;
       border: none;
       background-color: ${props.theme.palette.secondary.main};
+    `}
+
+  ${props =>
+    props.size === 'large' &&
+    `
+      font-size: 1.8rem;
+      padding: 10px 12px;
+    `}
+
+  ${props =>
+    props.size === 'small' &&
+    `
+      font-size: 1.4rem;
+      padding: 4px 6px;
     `}
 
   &:disabled {

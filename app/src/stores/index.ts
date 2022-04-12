@@ -1,10 +1,10 @@
 import { combineReducers } from 'redux';
 import { configureStore } from '@reduxjs/toolkit';
 
-import calendar from './calendar';
+import message from './message';
 
 const rootReducer = combineReducers({
-  calendar
+  message
 });
 
 const store = configureStore({ reducer: rootReducer });

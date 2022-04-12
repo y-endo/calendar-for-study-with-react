@@ -1,35 +1,30 @@
 import type React from 'react';
-import { MicroCMSListContent } from 'microcms-js-sdk';
 import TSchedule from '~/types/Schedule';
 import styled from 'styled-components';
+import ScheduleRegister from '~/components/ScheduleRegister';
 
 type Props = {
-  schedule?: (TSchedule & MicroCMSListContent)[];
-  setIsModalShow?: React.Dispatch<React.SetStateAction<boolean>>;
+  year: number;
+  month: number;
+  schedule?: TSchedule[];
 };
 
-const CalendarMonth: React.FC<Props> = ({ schedule, setIsModalShow }) => {
+const CalendarMonth: React.FC<Props> = props => {
   const week = ['日', '月', '火', '水', '木', '金', '土'];
   const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
-  const startDayOfWeek = new Date(year, month, 1).getDay();
-  const endDate = new Date(year, month - 1, 0).getDate();
+  const year = props.year;
+  const month = props.month;
+  const startDayOfWeek = new Date(year, month - 1, 1).getDay();
+  const endDate = new Date(year, month - 2, 0).getDate();
   const lastMonthEndDate = new Date(year, month, 0).getDate();
   const rowLength = Math.ceil((startDayOfWeek + endDate) / week.length);
   let count = 0;
-
-  function handleItemClick() {
-    if (setIsModalShow) {
-      setIsModalShow(true);
-    }
-  }
 
   const weekView = (
     <StyledRow>
       {week.map((day, index) => (
         <th key={`day-${index}`}>
-          <StyledWeekCell as={'span'}>{day}</StyledWeekCell>
+          <StyledWeekCell>{day}</StyledWeekCell>
         </th>
       ))}
     </StyledRow>
@@ -41,38 +36,39 @@ const CalendarMonth: React.FC<Props> = ({ schedule, setIsModalShow }) => {
       <StyledRow key={`row-${i}`}>
         {week.map((_, dayIndex) => {
           let dayNumber = -1;
-          let isDisabled = false;
+          let isThisMonth = true;
           let isToday = false;
 
           if (i == 0 && dayIndex < startDayOfWeek) {
             dayNumber = lastMonthEndDate - startDayOfWeek + dayIndex + 1;
-            isDisabled = true;
+            isThisMonth = false;
           } else if (count >= endDate) {
             count++;
             dayNumber = count - endDate;
-            isDisabled = true;
+            isThisMonth = false;
           } else {
             count++;
-            if (year == today.getFullYear() && month == today.getMonth() && count == today.getDate()) {
+            if (year == today.getFullYear() && month == today.getMonth() + 1 && count == today.getDate()) {
               isToday = true;
             }
             dayNumber = count;
           }
 
           let badgeCount = 0;
-          if (schedule) {
-            schedule.forEach(item => {
+          if (props.schedule) {
+            props.schedule.forEach(item => {
               const date = new Date(item.date);
-              if (year == date.getFullYear() && month == date.getMonth() && count == date.getDate()) {
+              if (year == date.getFullYear() && month == date.getMonth() + 1 && count == date.getDate()) {
                 badgeCount++;
               }
             });
           }
           return (
             <td key={`date-${dayIndex}`}>
-              <StyledCell disabled={isDisabled} today={isToday} onClick={handleItemClick}>
+              <StyledCell today={isToday} thisMonth={isThisMonth}>
                 <p>{dayNumber}</p>
                 {badgeCount > 0 && <StyledBadge>{badgeCount}</StyledBadge>}
+                <ScheduleRegister date={`${year}-${String(month).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`} />
               </StyledCell>
             </td>
           );
@@ -93,14 +89,13 @@ const StyledRow = styled.tr`
   display: flex;
 `;
 
-const StyledCell = styled.button<{
+const StyledCell = styled.div<{
   today?: boolean;
-  disabled?: boolean;
+  thisMonth?: boolean;
 }>`
-  display: flex;
-  justify-content: space-between;
-  width: 100px;
-  height: 100px;
+  position: relative;
+  width: 150px;
+  height: 150px;
   border: 1px solid #ccc;
   padding: 8px 10px;
 
@@ -111,19 +106,23 @@ const StyledCell = styled.button<{
     `}
 
   ${props =>
-    props.disabled &&
+    props.thisMonth === false &&
     `
       background-color: #e0e0e0;
     `}
 `;
 
 const StyledWeekCell = styled(StyledCell)`
+  display: flex;
   align-items: center;
   justify-content: center;
   height: 30px;
 `;
 
 const StyledBadge = styled.span`
+  position: absolute;
+  top: 8px;
+  right: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
