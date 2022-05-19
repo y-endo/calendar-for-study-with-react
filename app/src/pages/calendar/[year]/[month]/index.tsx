@@ -11,12 +11,21 @@ import CalendarMonth from '~/components/Calendar/month';
 import ScheduleList from '~/components/ScheduleList';
 import microCMSClient from '~/utils/microCMSClient';
 
+/**
+ * スケジュールデータを取得する
+ * @param endpoint
+ * @returns
+ */
 const fetcher = (endpoint: string) => microCMSClient.get<MicroCMSListResponse<TSchedule>>({ endpoint });
 
 const Month: NextPage = () => {
   const router = useRouter();
   const { year, month } = router.query;
-  const { data, error } = useSWR('schedule', fetcher);
+  const { data, error } = useSWR('schedule', fetcher, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false
+  });
   let scheduleContents: TSchedule[] = [];
 
   // urlが/calendar/yyyy/mm or m/ 形式じゃない場合リダイレクト
@@ -39,6 +48,7 @@ const Month: NextPage = () => {
   if (error) {
     scheduleContents = [
       {
+        id: 'error',
         date: '',
         title: '通信エラー'
       }
@@ -60,6 +70,10 @@ const Month: NextPage = () => {
     </DefaultLayout>
   );
 };
+
+//-----------------------------------------------------
+// Styled
+//-----------------------------------------------------
 
 const StyledContainer = styled.div`
   display: flex;

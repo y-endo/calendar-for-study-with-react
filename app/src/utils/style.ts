@@ -3,47 +3,47 @@ import styled from 'styled-components';
 /**
  * margin
  */
-interface MarginProps {
-  mt?: number;
-  mr?: number;
-  mb?: number;
-  ml?: number;
+export interface IMarginProps {
+  mt?: string;
+  mr?: string;
+  mb?: string;
+  ml?: string;
 }
 
-export const Margin = styled.div<MarginProps>`
-  margin-top: ${props => props.mt}px;
-  margin-right: ${props => props.mr}px;
-  margin-bottom: ${props => props.mb}px;
-  margin-left: ${props => props.ml}px;
+export const Margin = styled.div<IMarginProps>`
+  margin-top: ${props => props.mt};
+  margin-right: ${props => props.mr};
+  margin-bottom: ${props => props.mb};
+  margin-left: ${props => props.ml};
 `;
 
 Margin.defaultProps = {
-  mt: 0,
-  mr: 0,
-  mb: 0,
-  ml: 0
+  mt: '0',
+  mr: '0',
+  mb: '0',
+  ml: '0'
 };
 
 /**
  * padding
  */
-interface PaddingProps {
-  pt?: number;
-  pr?: number;
-  pb?: number;
-  pl?: number;
+export interface IPaddingProps {
+  pt?: string;
+  pr?: string;
+  pb?: string;
+  pl?: string;
 }
 
-export const Padding = styled.div<PaddingProps>`
-  padding-top: ${props => props.pt}px;
-  padding-right: ${props => props.pr}px;
-  padding-bottom: ${props => props.pb}px;
-  padding-left: ${props => props.pl}px;
+export const Padding = styled.div<IPaddingProps>`
+  padding-top: ${props => props.pt};
+  padding-right: ${props => props.pr};
+  padding-bottom: ${props => props.pb};
+  padding-left: ${props => props.pl};
 `;
 
 Padding.defaultProps = {
-  pt: 0,
-  pr: 0,
-  pb: 0,
-  pl: 0
+  pt: '0',
+  pr: '0',
+  pb: '0',
+  pl: '0'
 };

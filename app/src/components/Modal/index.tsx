@@ -3,21 +3,36 @@ import styled from 'styled-components';
 import { rgba } from 'polished';
 
 type Props = {
-  isShow: boolean;
-  setIsShow: React.Dispatch<React.SetStateAction<boolean>>;
+  isOpen: boolean;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const Modal: React.FC<Props> = ({ isShow, setIsShow, children }) => {
-  if (isShow) {
+/**
+ * モーダル
+ * @param param0
+ * @returns
+ */
+const Modal: React.FC<Props> = ({ isOpen, setIsOpen, children }) => {
+  if (isOpen) {
     return (
-      <StyledModal onClick={() => setIsShow(false)}>
-        <StyledModalInner onClick={event => event.stopPropagation()}>{children}</StyledModalInner>
+      <StyledModal onClick={() => setIsOpen(false)}>
+        <StyledModalInner onClick={event => event.stopPropagation()}>
+          {React.cloneElement(children as React.ReactElement, {
+            closeParentModal: () => {
+              setIsOpen(false);
+            }
+          })}
+        </StyledModalInner>
       </StyledModal>
     );
   } else {
     return null;
   }
 };
+
+//-----------------------------------------------------
+// Styled
+//-----------------------------------------------------
 
 const StyledModal = styled.div`
   display: flex;

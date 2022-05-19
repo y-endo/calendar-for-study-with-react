@@ -27,4 +27,22 @@ TypeScriptの型
 クライアントサイドでenv参照  
 https://nextjs.org/docs/api-reference/next.config.js/environment-variables  
 
-useRouterはuseEffectの中で使う
+useRouterはuseEffectの中で使う。  
+TypeScriptで特定のプロパティを削除した型を作る。  
+```
+type T1 = {
+    hoge: string
+    foo: number
+    bar: boolean
+}
+type T2 = Omit<T1, 'foo'>
+```
+
+SWRのuseSWRはデフォルトで自動再検証がONになっている。  
+https://swr.vercel.app/ja/docs/revalidation  
+useSWRImmutableを使うか、useSWRのオプションで再検証を無効にできる。  
+
+SWRのミューテーション(mutate)を使えば、リクエストを再実行できる。  
+https://swr.vercel.app/ja/docs/mutation  
+
+CSSの選択肢の1つとして、「Zero-runtime（ゼロランタイム）」を覚えてもいいかも。  

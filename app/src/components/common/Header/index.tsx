@@ -2,6 +2,10 @@ import type React from 'react';
 import styled from 'styled-components';
 import { Button } from '~/components/common/Button';
 
+/**
+ * 共通ヘッダー
+ * @returns
+ */
 const Header: React.FC = () => {
   return (
     <StyledHeader>
@@ -10,6 +14,10 @@ const Header: React.FC = () => {
     </StyledHeader>
   );
 };
+
+//-----------------------------------------------------
+// Styled
+//-----------------------------------------------------
 
 const StyledHeader = styled.header`
   display: flex;

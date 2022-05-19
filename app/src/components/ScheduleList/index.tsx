@@ -6,6 +6,11 @@ type Props = {
   data: TSchedule[];
 };
 
+/**
+ * スケジュール一覧
+ * @param param0
+ * @returns
+ */
 const ScheduleList: React.FC<Props> = ({ data }) => {
   return (
     <StyledScheduleList>
@@ -26,6 +31,10 @@ const ScheduleList: React.FC<Props> = ({ data }) => {
     </StyledScheduleList>
   );
 };
+
+//-----------------------------------------------------
+// Styled
+//-----------------------------------------------------
 
 const StyledScheduleList = styled.div`
   width: 200px;

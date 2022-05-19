@@ -14,10 +14,18 @@ type Props = {
     autoDeleteTime?: number;
   };
 };
+
+/**
+ * 全画面共通のメッセージリスト
+ * 右下に固定表示される。
+ * @param param0
+ * @returns
+ */
 const Message: React.FC<Props> = ({ data }) => {
   const dispatch = useDispatch<AppDispatch>();
 
   React.useEffect(() => {
+    // 自動削除
     if (data.autoDelete && data.autoDeleteTime) {
       setTimeout(() => {
         dispatch(deleteList(data.id));
@@ -25,7 +33,12 @@ const Message: React.FC<Props> = ({ data }) => {
     }
   }, []);
 
+  /**
+   * メッセージ本体のクリックイベントハンドラ
+   * @param event
+   */
   function handleClick(event: React.MouseEvent): void {
+    // クリックしたメッセージを削除
     const id = event.currentTarget.getAttribute('id')?.replace('message-item', '');
     if (id) {
       dispatch(deleteList(parseInt(id, 10)));
@@ -47,6 +60,10 @@ const MessageList: React.FC = () => {
 
   return <StyledMessageList>{view}</StyledMessageList>;
 };
+
+//-----------------------------------------------------
+// Styled
+//-----------------------------------------------------
 
 const StyledMessageList = styled.ul`
   position: fixed;

@@ -1,7 +1,11 @@
-import type React from 'react';
+import React from 'react';
 import TSchedule from '~/types/Schedule';
 import styled from 'styled-components';
-import ScheduleRegister from '~/components/ScheduleRegister';
+import Modal from '~/components/Modal';
+import ScheduleForm from '~/components/ScheduleForm';
+import ScheduleDetail from '~/components/ScheduleDetail';
+import { Button } from '~/components/common/Button';
+import { Margin } from '~/utils/style';
 
 type Props = {
   year: number;
@@ -9,7 +13,16 @@ type Props = {
   schedule?: TSchedule[];
 };
 
+/**
+ * 月カレンダー表
+ * @param props
+ * @returns
+ */
 const CalendarMonth: React.FC<Props> = props => {
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = React.useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = React.useState(false);
+  const selectedDate = React.useRef('');
+  const selectedId = React.useRef('');
   const week = ['日', '月', '火', '水', '木', '金', '土'];
   const today = new Date();
   const year = props.year;
@@ -20,6 +33,37 @@ const CalendarMonth: React.FC<Props> = props => {
   const rowLength = Math.ceil((startDayOfWeek + endDate) / week.length);
   let count = 0;
 
+  /**
+   * 予定を登録するボタンのクリックイベントハンドラ
+   * @param event イベント引数
+   */
+  function handleRegisterClick(event: React.MouseEvent) {
+    const date = event.currentTarget.closest('[data-date]')?.getAttribute('data-date');
+    if (date) {
+      selectedDate.current = date;
+    }
+
+    setIsRegisterModalOpen(true);
+  }
+
+  /**
+   * 予定リストのクリックイベントハンドラ
+   * @param event イベント引数
+   */
+  function handleScheduleClick(event: React.MouseEvent) {
+    const date = event.currentTarget.closest('[data-date]')?.getAttribute('data-date');
+    if (date) {
+      selectedDate.current = date;
+    }
+    const id = event.currentTarget.getAttribute('data-id');
+    if (id) {
+      selectedId.current = id;
+    }
+
+    setIsUpdateModalOpen(true);
+  }
+
+  // 表の1行目に曜日を表示
   const weekView = (
     <StyledRow>
       {week.map((day, index) => (
@@ -30,6 +74,7 @@ const CalendarMonth: React.FC<Props> = props => {
     </StyledRow>
   );
 
+  // カレンダーの表を作成
   const rowView = [];
   for (let i = 0; i < rowLength; i++) {
     rowView.push(
@@ -40,13 +85,16 @@ const CalendarMonth: React.FC<Props> = props => {
           let isToday = false;
 
           if (i == 0 && dayIndex < startDayOfWeek) {
+            // 先月末の日にち
             dayNumber = lastMonthEndDate - startDayOfWeek + dayIndex + 1;
             isThisMonth = false;
           } else if (count >= endDate) {
+            // 来月頭の日にち
             count++;
             dayNumber = count - endDate;
             isThisMonth = false;
           } else {
+            // 今月の日にち
             count++;
             if (year == today.getFullYear() && month == today.getMonth() + 1 && count == today.getDate()) {
               isToday = true;
@@ -54,21 +102,35 @@ const CalendarMonth: React.FC<Props> = props => {
             dayNumber = count;
           }
 
-          let badgeCount = 0;
+          // カレンダーのマスに表示するスケジュール一覧
+          const scheduleList: JSX.Element[] = [];
           if (props.schedule) {
             props.schedule.forEach(item => {
               const date = new Date(item.date);
               if (year == date.getFullYear() && month == date.getMonth() + 1 && count == date.getDate()) {
-                badgeCount++;
+                scheduleList.push(
+                  <StyledScheduleItem key={`item-${item.id}`} isImportant={item.isImportant} data-id={item.id} onClick={handleScheduleClick}>
+                    {item.title}
+                  </StyledScheduleItem>
+                );
               }
             });
           }
+
           return (
             <td key={`date-${dayIndex}`}>
-              <StyledCell today={isToday} thisMonth={isThisMonth}>
-                <p>{dayNumber}</p>
-                {badgeCount > 0 && <StyledBadge>{badgeCount}</StyledBadge>}
-                <ScheduleRegister date={`${year}-${String(month).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`} />
+              <StyledCell
+                today={isToday}
+                thisMonth={isThisMonth}
+                data-date={`${year}-${String(month).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`}
+              >
+                <StyledDayNumber>{dayNumber}</StyledDayNumber>
+                {scheduleList.length > 0 && <StyledScheduleList>{scheduleList}</StyledScheduleList>}
+                <Margin mt={'auto'}>
+                  <Button size="small" onClick={handleRegisterClick}>
+                    予定を登録する
+                  </Button>
+                </Margin>
               </StyledCell>
             </td>
           );
@@ -78,12 +140,24 @@ const CalendarMonth: React.FC<Props> = props => {
   }
 
   return (
-    <table>
-      <thead>{weekView}</thead>
-      <tbody>{rowView}</tbody>
-    </table>
+    <>
+      <table>
+        <thead>{weekView}</thead>
+        <tbody>{rowView}</tbody>
+      </table>
+      <Modal isOpen={isRegisterModalOpen} setIsOpen={setIsRegisterModalOpen}>
+        <ScheduleForm date={selectedDate.current} />
+      </Modal>
+      <Modal isOpen={isUpdateModalOpen} setIsOpen={setIsUpdateModalOpen}>
+        <ScheduleDetail contentId={selectedId.current} />
+      </Modal>
+    </>
   );
 };
+
+//-----------------------------------------------------
+// Styled
+//-----------------------------------------------------
 
 const StyledRow = styled.tr`
   display: flex;
@@ -93,6 +167,8 @@ const StyledCell = styled.div<{
   today?: boolean;
   thisMonth?: boolean;
 }>`
+  display: flex;
+  flex-direction: column;
   position: relative;
   width: 150px;
   height: 150px;
@@ -102,7 +178,7 @@ const StyledCell = styled.div<{
   ${props =>
     props.today &&
     `
-      background-color: ${props.theme.palette.primary.light};
+      background-color: ${props.theme.palette.secondary.light};
     `}
 
   ${props =>
@@ -114,24 +190,36 @@ const StyledCell = styled.div<{
 
 const StyledWeekCell = styled(StyledCell)`
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   height: 30px;
 `;
 
-const StyledBadge = styled.span`
-  position: absolute;
-  top: 8px;
-  right: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+const StyledDayNumber = styled.p`
+  font-size: 1.3rem;
+  line-height: 1;
+  text-align: center;
+`;
+
+const StyledScheduleList = styled.ul`
+  height: calc(24px * 3);
+  margin: 5px 0;
+  overflow: hidden;
+`;
+const StyledScheduleItem = styled.li<{
+  isImportant?: boolean;
+}>`
+  font-size: 1.2rem;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  height: 20px;
+  padding: 0 4px;
+  margin: 4px 0;
+  background-color: ${props => (props.isImportant ? props.theme.palette.primary.dark : props.theme.palette.primary.light)};
   color: #fff;
-  background-color: ${props => props.theme.palette.primary.dark};
-  font-size: 1rem;
+  cursor: pointer;
 `;
 
 export default CalendarMonth;

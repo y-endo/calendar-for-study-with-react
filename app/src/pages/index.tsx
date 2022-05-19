@@ -5,6 +5,11 @@ import useSWR from 'swr';
 import Head from 'next/head';
 import type { TToday } from '~/pages/api/today';
 
+/**
+ * 今日の日付を取得する
+ * @param endpoint
+ * @returns
+ */
 const fetcher = (endpoint: string): Promise<TToday> => fetch(endpoint).then(res => res.json());
 
 const Home: NextPage = () => {
