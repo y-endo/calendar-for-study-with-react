@@ -22,6 +22,7 @@ const Modal: React.FC<Props> = ({ isOpen, setIsOpen, children }) => {
               setIsOpen(false);
             }
           })}
+          <StyledCloseButton onClick={() => setIsOpen(false)} />
         </StyledModalInner>
       </StyledModal>
     );
@@ -48,9 +49,20 @@ const StyledModal = styled.div`
 `;
 
 const StyledModalInner = styled.div`
+  position: relative;
   width: 1000px;
-  padding: 20px;
+  padding: 50px 20px;
   background: #fff;
+`;
+
+const StyledCloseButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  width: 30px;
+  height: 30px;
+  background: url('/img/icon-close.svg') no-repeat center center;
+  background-size: cover;
 `;
 
 export default Modal;

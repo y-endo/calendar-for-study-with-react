@@ -46,3 +46,11 @@ SWRのミューテーション(mutate)を使えば、リクエストを再実行
 https://swr.vercel.app/ja/docs/mutation  
 
 CSSの選択肢の1つとして、「Zero-runtime（ゼロランタイム）」を覚えてもいいかも。  
+
+microCMSの通信パターン  
+- GET: endpointまでで全取得
+- GET: endpoint/content_idで該当データ取得
+- POST: 投稿（IDは自動生成）
+- PUT: endpoint/content_idで指定したIDのデータを作成（POSTとの違いはIDの指定）
+- PATCH: 更新
+- DELETE: 削除

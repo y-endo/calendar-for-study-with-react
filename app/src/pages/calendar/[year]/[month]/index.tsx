@@ -18,7 +18,7 @@ import microCMSClient from '~/utils/microCMSClient';
  */
 const fetcher = (endpoint: string) => microCMSClient.get<MicroCMSListResponse<TSchedule>>({ endpoint });
 
-const Month: NextPage = () => {
+const CalendarMonthPage: NextPage = () => {
   const router = useRouter();
   const { year, month } = router.query;
   const { data, error } = useSWR('schedule', fetcher, {
@@ -32,7 +32,8 @@ const Month: NextPage = () => {
   React.useEffect(() => {
     if (year && month) {
       if (!(isNaN(Number(year)) || isNaN(Number(month)))) {
-        if (year.length !== 4) {
+        // /yyyy/ が4桁じゃない or 1950 より小さい or 2100 より大きい
+        if (year.length !== 4 || Number(year) <= 1950 || Number(year) >= 2100) {
           router.replace('/');
         }
         if (month.length > 2 || parseInt(String(month), 10) > 12) {
@@ -78,6 +79,8 @@ const Month: NextPage = () => {
 const StyledContainer = styled.div`
   display: flex;
   align-items: stretch;
+  position: relative;
+  padding: 0 20px 20px;
 `;
 
-export default Month;
+export default CalendarMonthPage;

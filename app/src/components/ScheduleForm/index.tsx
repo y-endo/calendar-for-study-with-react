@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { Button } from '~/components/common/Button';
 import { Margin } from '~/utils/style';
-import { addList } from '~/stores/message';
+import { addMessage } from '~/stores/message';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '~/stores';
 import { useSWRConfig } from 'swr';
@@ -59,7 +59,7 @@ const ScheduleForm: React.FC<Props> = ({ date, closeParentModal }) => {
     });
     if (registered.status === 201) {
       dispatch(
-        addList({
+        addMessage({
           id: new Date().getTime(),
           text: `${date.value}に${title.value}の予定を登録しました`,
           autoDelete: true,

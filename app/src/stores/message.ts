@@ -15,15 +15,15 @@ const slice = createSlice({
   name: 'message',
   initialState,
   reducers: {
-    addList: (state, action) => {
+    addMessage: (state, action) => {
       state.list.push(action.payload);
     },
-    deleteList: (state, action) => {
+    deleteMessage: (state, action) => {
       return { ...state, ...{ list: state.list.filter(data => data.id !== action.payload) } };
     },
-    clear: () => initialState
+    clearMessage: () => initialState
   }
 });
 
-export const { addList, deleteList, clear } = slice.actions;
+export const { addMessage, deleteMessage, clearMessage } = slice.actions;
 export default slice.reducer;

@@ -65,13 +65,13 @@ const CalendarMonth: React.FC<Props> = props => {
 
   // 表の1行目に曜日を表示
   const weekView = (
-    <StyledRow>
+    <StyledRowWeek>
       {week.map((day, index) => (
-        <th key={`day-${index}`}>
-          <StyledWeekCell>{day}</StyledWeekCell>
-        </th>
+        <StyledCell as="th" key={`day-${index}`}>
+          <StyledCellContent>{day}</StyledCellContent>
+        </StyledCell>
       ))}
-    </StyledRow>
+    </StyledRowWeek>
   );
 
   // カレンダーの表を作成
@@ -118,8 +118,8 @@ const CalendarMonth: React.FC<Props> = props => {
           }
 
           return (
-            <td key={`date-${dayIndex}`}>
-              <StyledCell
+            <StyledCell key={`date-${dayIndex}`}>
+              <StyledCellContent
                 today={isToday}
                 thisMonth={isThisMonth}
                 data-date={`${year}-${String(month).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`}
@@ -131,8 +131,8 @@ const CalendarMonth: React.FC<Props> = props => {
                     予定を登録する
                   </Button>
                 </Margin>
-              </StyledCell>
-            </td>
+              </StyledCellContent>
+            </StyledCell>
           );
         })}
       </StyledRow>
@@ -141,10 +141,10 @@ const CalendarMonth: React.FC<Props> = props => {
 
   return (
     <>
-      <table>
+      <StyledTable>
         <thead>{weekView}</thead>
         <tbody>{rowView}</tbody>
-      </table>
+      </StyledTable>
       <Modal isOpen={isRegisterModalOpen} setIsOpen={setIsRegisterModalOpen}>
         <ScheduleForm date={selectedDate.current} />
       </Modal>
@@ -159,11 +159,20 @@ const CalendarMonth: React.FC<Props> = props => {
 // Styled
 //-----------------------------------------------------
 
-const StyledRow = styled.tr`
-  display: flex;
+const StyledTable = styled.table`
+  border-collapse: collapse;
 `;
 
-const StyledCell = styled.div<{
+const StyledRow = styled.tr`
+  /* display: flex; */
+`;
+
+const StyledCell = styled.td`
+  height: 150px;
+  border: 1px solid #ccc;
+`;
+
+const StyledCellContent = styled.div<{
   today?: boolean;
   thisMonth?: boolean;
 }>`
@@ -171,8 +180,7 @@ const StyledCell = styled.div<{
   flex-direction: column;
   position: relative;
   width: 150px;
-  height: 150px;
-  border: 1px solid #ccc;
+  height: 100%;
   padding: 8px 10px;
 
   ${props =>
@@ -188,12 +196,17 @@ const StyledCell = styled.div<{
     `}
 `;
 
-const StyledWeekCell = styled(StyledCell)`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  height: 30px;
+const StyledRowWeek = styled(StyledRow)`
+  ${StyledCell} {
+    height: 30px;
+  }
+
+  ${StyledCellContent} {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
 `;
 
 const StyledDayNumber = styled.p`

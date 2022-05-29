@@ -4,7 +4,7 @@ import { rgba } from 'polished';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '~/stores';
 import { AppDispatch } from '~/stores';
-import { deleteList } from '~/stores/message';
+import { deleteMessage } from '~/stores/message';
 
 type Props = {
   data: {
@@ -28,7 +28,7 @@ const Message: React.FC<Props> = ({ data }) => {
     // 自動削除
     if (data.autoDelete && data.autoDeleteTime) {
       setTimeout(() => {
-        dispatch(deleteList(data.id));
+        dispatch(deleteMessage(data.id));
       }, data.autoDeleteTime);
     }
   }, []);
@@ -41,7 +41,7 @@ const Message: React.FC<Props> = ({ data }) => {
     // クリックしたメッセージを削除
     const id = event.currentTarget.getAttribute('id')?.replace('message-item', '');
     if (id) {
-      dispatch(deleteList(parseInt(id, 10)));
+      dispatch(deleteMessage(parseInt(id, 10)));
     }
   }
 
