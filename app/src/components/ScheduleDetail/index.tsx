@@ -1,15 +1,24 @@
 import React from 'react';
 import styled from 'styled-components';
+import Link from 'next/link';
 import useSWR, { useSWRConfig } from 'swr';
 import { MicroCMSListContent } from 'microcms-js-sdk';
-import TSchedule from '~/types/Schedule';
-import microCMSClient from '~/utils/microCMSClient';
-import { Button } from '~/components/common/Button';
-import { addMessage } from '~/stores/message';
 import { useDispatch } from 'react-redux';
-import { AppDispatch } from '~/stores';
-import Link from 'next/link';
 
+import TSchedule from '~/types/Schedule';
+
+import { Button } from '~/components/common/Button';
+
+import { addMessage } from '~/stores/message';
+import { AppDispatch } from '~/stores';
+
+import microCMSClient from '~/utils/microCMSClient';
+
+/**
+ * Props
+ * contentId: microCMSに登録されているID
+ * closeParentModal: モーダル内に表示されている場合、親モーダルを閉じる関数
+ */
 type Props = {
   contentId: string;
   closeParentModal?: Function;
@@ -19,14 +28,11 @@ type Props = {
  * スケジュールデータ1件を取得する
  * @param endpoint
  * @param contentId
- * @returns
  */
 const fetcher = (endpoint: string, contentId: string) => microCMSClient.get<MicroCMSListContent & TSchedule>({ endpoint, contentId });
 
 /**
  * スケジュール詳細
- * @param param0
- * @returns
  */
 const ScheduleDetail: React.FC<Props> = ({ contentId, closeParentModal }) => {
   const [isEditClick, setIsEditClick] = React.useState(false);
@@ -113,6 +119,10 @@ const ScheduleDetail: React.FC<Props> = ({ contentId, closeParentModal }) => {
   }
   return <p>読込中</p>;
 };
+
+//-----------------------------------------------------
+// Styled
+//-----------------------------------------------------
 
 const StyledDetail = styled.div`
   position: relative;

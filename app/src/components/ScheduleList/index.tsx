@@ -1,15 +1,18 @@
 import type React from 'react';
 import styled from 'styled-components';
+
 import TSchedule from '~/types/Schedule';
 
+/**
+ * Props
+ * data: microCMSから取得したデータ
+ */
 type Props = {
   data: TSchedule[];
 };
 
 /**
  * スケジュール一覧
- * @param param0
- * @returns
  */
 const ScheduleList: React.FC<Props> = ({ data }) => {
   return (

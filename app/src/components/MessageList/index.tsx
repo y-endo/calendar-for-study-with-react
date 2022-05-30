@@ -2,10 +2,18 @@ import React from 'react';
 import styled from 'styled-components';
 import { rgba } from 'polished';
 import { useDispatch, useSelector } from 'react-redux';
+
 import { RootState } from '~/stores';
 import { AppDispatch } from '~/stores';
 import { deleteMessage } from '~/stores/message';
 
+/**
+ * Props
+ * data.id: メッセージ管理ID
+ * data.text: メッセージテキスト
+ * data.autoDelete: 自動非表示フラグ
+ * data.autoDeleteTime: 自動表示するまでの時間（ms）
+ */
 type Props = {
   data: {
     id: number;
@@ -18,8 +26,6 @@ type Props = {
 /**
  * 全画面共通のメッセージリスト
  * 右下に固定表示される。
- * @param param0
- * @returns
  */
 const Message: React.FC<Props> = ({ data }) => {
   const dispatch = useDispatch<AppDispatch>();

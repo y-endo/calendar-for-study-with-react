@@ -1,12 +1,21 @@
 import React from 'react';
-import TSchedule from '~/types/Schedule';
 import styled from 'styled-components';
+
+import TSchedule from '~/types/Schedule';
+
+import { Button } from '~/components/common/Button';
 import Modal from '~/components/Modal';
 import ScheduleForm from '~/components/ScheduleForm';
 import ScheduleDetail from '~/components/ScheduleDetail';
-import { Button } from '~/components/common/Button';
+
 import { Margin } from '~/utils/style';
 
+/**
+ * Props
+ * year: カレンダーの年
+ * month: カレンダーの月
+ * schedule: 予定一覧データ
+ */
 type Props = {
   year: number;
   month: number;
@@ -16,7 +25,6 @@ type Props = {
 /**
  * 月カレンダー表
  * @param props
- * @returns
  */
 const CalendarMonth: React.FC<Props> = props => {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = React.useState(false);
@@ -31,7 +39,7 @@ const CalendarMonth: React.FC<Props> = props => {
   const endDate = new Date(year, month - 2, 0).getDate();
   const lastMonthEndDate = new Date(year, month, 0).getDate();
   const rowLength = Math.ceil((startDayOfWeek + endDate) / week.length);
-  let count = 0;
+  let count = 0; // 月カレンダー表を作成するループ中の現在位置
 
   /**
    * 予定を登録するボタンのクリックイベントハンドラ
@@ -47,7 +55,7 @@ const CalendarMonth: React.FC<Props> = props => {
   }
 
   /**
-   * 予定リストのクリックイベントハンドラ
+   * カレンダー表上の予定リストのクリックイベントハンドラ
    * @param event イベント引数
    */
   function handleScheduleClick(event: React.MouseEvent) {
@@ -55,6 +63,7 @@ const CalendarMonth: React.FC<Props> = props => {
     if (date) {
       selectedDate.current = date;
     }
+
     const id = event.currentTarget.getAttribute('data-id');
     if (id) {
       selectedId.current = id;
@@ -75,23 +84,23 @@ const CalendarMonth: React.FC<Props> = props => {
   );
 
   // カレンダーの表を作成
-  const rowView = [];
+  const bodyView = [];
   for (let i = 0; i < rowLength; i++) {
-    rowView.push(
+    bodyView.push(
       <StyledRow key={`row-${i}`}>
         {week.map((_, dayIndex) => {
-          let dayNumber = -1;
+          let currentDayNumber = -1;
           let isThisMonth = true;
           let isToday = false;
 
           if (i == 0 && dayIndex < startDayOfWeek) {
             // 先月末の日にち
-            dayNumber = lastMonthEndDate - startDayOfWeek + dayIndex + 1;
+            currentDayNumber = lastMonthEndDate - startDayOfWeek + dayIndex + 1;
             isThisMonth = false;
           } else if (count >= endDate) {
             // 来月頭の日にち
             count++;
-            dayNumber = count - endDate;
+            currentDayNumber = count - endDate;
             isThisMonth = false;
           } else {
             // 今月の日にち
@@ -99,7 +108,7 @@ const CalendarMonth: React.FC<Props> = props => {
             if (year == today.getFullYear() && month == today.getMonth() + 1 && count == today.getDate()) {
               isToday = true;
             }
-            dayNumber = count;
+            currentDayNumber = count;
           }
 
           // カレンダーのマスに表示するスケジュール一覧
@@ -107,7 +116,7 @@ const CalendarMonth: React.FC<Props> = props => {
           if (props.schedule) {
             props.schedule.forEach(item => {
               const date = new Date(item.date);
-              if (year == date.getFullYear() && month == date.getMonth() + 1 && count == date.getDate()) {
+              if (year == date.getFullYear() && month == date.getMonth() + 1 && currentDayNumber == date.getDate()) {
                 scheduleList.push(
                   <StyledScheduleItem key={`item-${item.id}`} isImportant={item.isImportant} data-id={item.id} onClick={handleScheduleClick}>
                     {item.title}
@@ -122,9 +131,9 @@ const CalendarMonth: React.FC<Props> = props => {
               <StyledCellContent
                 today={isToday}
                 thisMonth={isThisMonth}
-                data-date={`${year}-${String(month).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`}
+                data-date={`${year}-${String(month).padStart(2, '0')}-${String(currentDayNumber).padStart(2, '0')}`}
               >
-                <StyledDayNumber>{dayNumber}</StyledDayNumber>
+                <StyledDayNumber>{currentDayNumber}</StyledDayNumber>
                 {scheduleList.length > 0 && <StyledScheduleList>{scheduleList}</StyledScheduleList>}
                 <Margin mt={'auto'}>
                   <Button size="small" onClick={handleRegisterClick}>
@@ -143,7 +152,7 @@ const CalendarMonth: React.FC<Props> = props => {
     <>
       <StyledTable>
         <thead>{weekView}</thead>
-        <tbody>{rowView}</tbody>
+        <tbody>{bodyView}</tbody>
       </StyledTable>
       <Modal isOpen={isRegisterModalOpen} setIsOpen={setIsRegisterModalOpen}>
         <ScheduleForm date={selectedDate.current} />

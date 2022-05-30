@@ -1,5 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+/**
+ * 今日の日時を取得するAPI
+ */
 export type TToday = {
   year: number;
   month: number;

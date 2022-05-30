@@ -1,16 +1,20 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Button } from '~/components/common/Button';
-import { Margin } from '~/utils/style';
 import { NextPage, InferGetStaticPropsType, GetStaticProps, GetStaticPaths } from 'next';
-import { MicroCMSListContent, MicroCMSListResponse } from 'microcms-js-sdk';
+import Head from 'next/head';
 import { useDispatch } from 'react-redux';
+import { MicroCMSListContent, MicroCMSListResponse } from 'microcms-js-sdk';
+
+import TSchedule from '~/types/Schedule';
+
+import DefaultLayout from '~/components/layouts/Default';
+import { Button } from '~/components/common/Button';
+
 import { AppDispatch } from '~/stores';
 import { addMessage } from '~/stores/message';
+
+import { Margin } from '~/utils/style';
 import microCMSClient from '~/utils/microCMSClient';
-import TSchedule from '~/types/Schedule';
-import Head from 'next/head';
-import DefaultLayout from '~/components/layouts/Default';
 
 type Props = InferGetStaticPropsType<typeof getStaticProps>;
 
@@ -49,6 +53,9 @@ export const getStaticPaths: GetStaticPaths = async () => {
   };
 };
 
+/**
+ * スケジュール詳細（編集）ページ
+ */
 const SchedulePage: NextPage<Props> = ({ schedule }) => {
   const [isFetching, setIsFetching] = React.useState(false);
   const date = new Date(schedule.date);

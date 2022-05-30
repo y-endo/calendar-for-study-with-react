@@ -1,17 +1,21 @@
 import React from 'react';
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
-import useSWR from 'swr';
 import Head from 'next/head';
+import useSWR from 'swr';
+
 import type { TToday } from '~/pages/api/today';
 
 /**
  * 今日の日付を取得する
  * @param endpoint
- * @returns
  */
 const fetcher = (endpoint: string): Promise<TToday> => fetch(endpoint).then(res => res.json());
 
+/**
+ * トップページ
+ * トップページは存在せず、カレンダーページにリダイレクトする
+ */
 const Home: NextPage = () => {
   const router = useRouter();
   const { data, error } = useSWR('/api/today', fetcher);

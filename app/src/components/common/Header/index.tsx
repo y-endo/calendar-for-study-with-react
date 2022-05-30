@@ -1,13 +1,14 @@
 import type React from 'react';
+import styled from 'styled-components';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import styled from 'styled-components';
-import { Margin } from '~/utils/style';
+
 import { Button } from '~/components/common/Button';
+
+import { Margin } from '~/utils/style';
 
 /**
  * 共通ヘッダー
- * @returns
  */
 const Header: React.FC = () => {
   const router = useRouter();

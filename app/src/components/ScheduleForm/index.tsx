@@ -1,13 +1,22 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Button } from '~/components/common/Button';
-import { Margin } from '~/utils/style';
-import { addMessage } from '~/stores/message';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '~/stores';
 import { useSWRConfig } from 'swr';
+import { useDispatch } from 'react-redux';
+
 import TSchedule from '~/types/Schedule';
 
+import { Button } from '~/components/common/Button';
+
+import { addMessage } from '~/stores/message';
+import { AppDispatch } from '~/stores';
+
+import { Margin } from '~/utils/style';
+
+/**
+ * Props
+ * date: スケジュールを登録する日時
+ * closeParentModal: モーダル内に表示されている場合、親モーダルを閉じる関数
+ */
 type Props = {
   date?: string;
   closeParentModal?: Function;
@@ -15,8 +24,6 @@ type Props = {
 
 /**
  * スケジュールを登録するフォーム
- * @param param0
- * @returns
  */
 const ScheduleForm: React.FC<Props> = ({ date, closeParentModal }) => {
   const hasDateProps = typeof date === 'string' && date !== '';

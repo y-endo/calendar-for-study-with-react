@@ -1,10 +1,12 @@
 import styled from 'styled-components';
 
+/**
+ * 汎用ボタン
+ */
 type ButtonProps = {
   color?: 'primary' | 'secondary';
   size?: 'large' | 'small';
 };
-
 export const Button = styled.button<ButtonProps>`
   display: inline-flex;
   align-items: center;

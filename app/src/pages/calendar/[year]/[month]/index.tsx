@@ -1,23 +1,28 @@
 import React from 'react';
+import styled from 'styled-components';
+import Head from 'next/head';
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import useSWR from 'swr';
 import { MicroCMSListResponse } from 'microcms-js-sdk';
-import styled from 'styled-components';
+
 import TSchedule from '~/types/Schedule';
-import Head from 'next/head';
+
 import DefaultLayout from '~/components/layouts/Default';
 import CalendarMonth from '~/components/Calendar/month';
 import ScheduleList from '~/components/ScheduleList';
+
 import microCMSClient from '~/utils/microCMSClient';
 
 /**
  * スケジュールデータを取得する
  * @param endpoint
- * @returns
  */
 const fetcher = (endpoint: string) => microCMSClient.get<MicroCMSListResponse<TSchedule>>({ endpoint });
 
+/**
+ * カレンダーページ
+ */
 const CalendarMonthPage: NextPage = () => {
   const router = useRouter();
   const { year, month } = router.query;
@@ -66,7 +71,7 @@ const CalendarMonthPage: NextPage = () => {
       </Head>
       <StyledContainer>
         <CalendarMonth year={parseInt(year as string, 10)} month={parseInt(month as string, 10)} schedule={scheduleContents} />
-        <ScheduleList data={scheduleContents} />
+        {/* <ScheduleList data={scheduleContents} /> */}
       </StyledContainer>
     </DefaultLayout>
   );

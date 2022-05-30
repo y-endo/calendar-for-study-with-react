@@ -2,6 +2,11 @@ import React from 'react';
 import styled from 'styled-components';
 import { rgba } from 'polished';
 
+/**
+ * Props
+ * isOpen: 表示フラグ
+ * setIsOpen: 表示フラグを切り替えるStateAction
+ */
 type Props = {
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -9,8 +14,8 @@ type Props = {
 
 /**
  * モーダル
- * @param param0
- * @returns
+ * 親コンポーネントから呼び出される前提
+ * モーダルコンポーネント自身に開閉フラグのstateを持たせない
  */
 const Modal: React.FC<Props> = ({ isOpen, setIsOpen, children }) => {
   if (isOpen) {
