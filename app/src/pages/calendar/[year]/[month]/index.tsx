@@ -10,7 +10,6 @@ import TSchedule from '~/types/Schedule';
 
 import DefaultLayout from '~/components/layouts/Default';
 import CalendarMonth from '~/components/Calendar/month';
-import ScheduleList from '~/components/ScheduleList';
 
 import microCMSClient from '~/utils/microCMSClient';
 
@@ -71,7 +70,6 @@ const CalendarMonthPage: NextPage = () => {
       </Head>
       <StyledContainer>
         <CalendarMonth year={parseInt(year as string, 10)} month={parseInt(month as string, 10)} schedule={scheduleContents} />
-        {/* <ScheduleList data={scheduleContents} /> */}
       </StyledContainer>
     </DefaultLayout>
   );

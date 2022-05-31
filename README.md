@@ -14,6 +14,8 @@
 - ReactTestingLibrary + Jest のテスト導入
   - 余裕があればCypressのテスト導入
 - microCMSのWebhookでアプリケーション側の自動更新機能
+- パフォーマンスチューニングを行う
+- Storybookを導入する
 
 ## メモ
 

@@ -4,13 +4,13 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import useSWR from 'swr';
 
-import type { TToday } from '~/pages/api/today';
+import type { TNow } from '~/pages/api/now';
 
 /**
  * 今日の日付を取得する
  * @param endpoint
  */
-const fetcher = (endpoint: string): Promise<TToday> => fetch(endpoint).then(res => res.json());
+const fetcher = (endpoint: string): Promise<TNow> => fetch(endpoint).then(res => res.json());
 
 /**
  * トップページ
@@ -18,13 +18,17 @@ const fetcher = (endpoint: string): Promise<TToday> => fetch(endpoint).then(res 
  */
 const Home: NextPage = () => {
   const router = useRouter();
-  const { data, error } = useSWR('/api/today', fetcher);
+  const { data, error } = useSWR('/api/now', fetcher, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false
+  });
 
   React.useEffect(() => {
     let redirectURL = '';
     if (error) {
-      const today = new Date();
-      redirectURL = `/calendar/${today.getFullYear()}/${today.getMonth() + 1}`;
+      const now = new Date();
+      redirectURL = `/calendar/${now.getFullYear()}/${now.getMonth() + 1}`;
     }
     if (data) {
       redirectURL = `/calendar/${data.year}/${data.month}`;
