@@ -14,8 +14,8 @@ const Header: React.FC = () => {
   const router = useRouter();
   const { year, month } = router.query;
 
-  // ヘッダーのナビ（矢印）でカレンダーの月を移動
-  let Nav = null;
+  let Nav = null; // ヘッダーのナビ（矢印）でカレンダーの月を移動
+  let YearMonth = null; // 現在の年月
   if (year && month) {
     const yearNumber = parseInt(year as string, 10);
     const monthNumber = parseInt(month as string, 10);
@@ -38,6 +38,12 @@ const Header: React.FC = () => {
         </Link>
       </StyledNav>
     );
+
+    YearMonth = (
+      <StyledYearMonth>
+        {year}年{month}月
+      </StyledYearMonth>
+    );
   }
 
   return (
@@ -45,6 +51,7 @@ const Header: React.FC = () => {
       <h1>カレンダー</h1>
       <StyledTodayButton ml="20px">今日</StyledTodayButton>
       {Nav}
+      {YearMonth}
     </StyledHeader>
   );
 };
@@ -56,7 +63,9 @@ const Header: React.FC = () => {
 const StyledHeader = styled.header`
   display: flex;
   align-items: center;
-  padding: 20px;
+  height: 80px;
+  padding: 0 20px;
+  border-bottom: 1px solid #ccc;
 
   h1 {
     font-size: 2rem;
@@ -79,6 +88,11 @@ const StyledArrow = styled.button<{ direction?: string }>`
   border-top: 1px solid #000;
   border-right: 1px solid #000;
   transform: ${props => (props.direction === 'left' ? 'rotate(-135deg)' : 'rotate(45deg)')};
+`;
+
+const StyledYearMonth = styled.div`
+  font-size: 1.8rem;
+  margin-left: 15px;
 `;
 
 export default Header;

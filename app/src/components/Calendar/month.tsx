@@ -38,7 +38,7 @@ const CalendarMonth: React.FC<Props> = props => {
   const startDayOfWeek = new Date(year, month - 1, 1).getDay();
   const endDate = new Date(year, month - 2, 0).getDate();
   const lastMonthEndDate = new Date(year, month, 0).getDate();
-  const rowLength = Math.ceil((startDayOfWeek + endDate) / week.length);
+  const rowLength = 6; // 行の数を6で固定する
   let count = 0; // 月カレンダー表を作成するループ中の現在位置
 
   /**
@@ -135,7 +135,7 @@ const CalendarMonth: React.FC<Props> = props => {
               >
                 <StyledDayNumber>{currentDayNumber}</StyledDayNumber>
                 {scheduleList.length > 0 && <StyledScheduleList>{scheduleList}</StyledScheduleList>}
-                <Margin mt={'auto'}>
+                <Margin mt="auto" mr="auto" ml="auto">
                   <Button size="small" onClick={handleRegisterClick}>
                     予定を登録する
                   </Button>
@@ -169,16 +169,24 @@ const CalendarMonth: React.FC<Props> = props => {
 //-----------------------------------------------------
 
 const StyledTable = styled.table`
-  border-collapse: collapse;
+  width: 100%;
+  height: 100%;
 `;
 
 const StyledRow = styled.tr`
-  /* display: flex; */
+  display: flex;
+  height: calc(100% / 6);
+  border-top: 1px solid #ccc;
 `;
 
 const StyledCell = styled.td`
-  height: 150px;
-  border: 1px solid #ccc;
+  width: calc(100% / 7);
+  border-right: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+
+  & + & {
+    border-left: none;
+  }
 `;
 
 const StyledCellContent = styled.div<{
@@ -188,7 +196,7 @@ const StyledCellContent = styled.div<{
   display: flex;
   flex-direction: column;
   position: relative;
-  width: 150px;
+  width: 100%;
   height: 100%;
   padding: 8px 10px;
 
@@ -206,8 +214,11 @@ const StyledCellContent = styled.div<{
 `;
 
 const StyledRowWeek = styled(StyledRow)`
+  border-top: none;
+
   ${StyledCell} {
     height: 30px;
+    border-top: none;
   }
 
   ${StyledCellContent} {
@@ -227,8 +238,9 @@ const StyledDayNumber = styled.p`
 const StyledScheduleList = styled.ul`
   height: calc(24px * 3);
   margin: 5px 0;
-  overflow: hidden;
+  overflow: auto;
 `;
+
 const StyledScheduleItem = styled.li<{
   isImportant?: boolean;
 }>`

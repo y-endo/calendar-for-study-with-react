@@ -85,7 +85,8 @@ const StyledContainer = styled.div`
   display: flex;
   align-items: stretch;
   position: relative;
-  padding: 0 20px 20px;
+  height: calc(100vh - 80px); // -80px = header
+  padding: 0 20px;
 `;
 
 export default CalendarMonthPage;
