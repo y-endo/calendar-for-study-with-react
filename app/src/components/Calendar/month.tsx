@@ -181,8 +181,8 @@ const CalendarMonth: React.FC<Props> = props => {
   return (
     <>
       <StyledTable>
-        <thead>{weekView}</thead>
-        <tbody>{bodyView}</tbody>
+        <StyledTableHead>{weekView}</StyledTableHead>
+        <StyledTableBody>{bodyView}</StyledTableBody>
       </StyledTable>
       <Modal isOpen={isRegisterModalOpen} setIsOpen={setIsRegisterModalOpen}>
         <ScheduleForm date={selectedDate.current} />
@@ -199,8 +199,19 @@ const CalendarMonth: React.FC<Props> = props => {
 //-----------------------------------------------------
 
 const StyledTable = styled.table`
+  display: block;
   width: 100%;
   height: 100%;
+`;
+
+const StyledTableHead = styled.thead`
+  display: block;
+  height: 30px;
+`;
+
+const StyledTableBody = styled.tbody`
+  display: block;
+  height: calc(100% - 30px); // -30px = thead
 `;
 
 const StyledRow = styled.tr`

@@ -14,6 +14,26 @@ const Header: React.FC = () => {
   const router = useRouter();
   const { year, month } = router.query;
 
+  /**
+   * スケジュール検索のsubmitイベントハンドラ
+   * @param event
+   */
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+
+    const form = event.target as typeof event.target & {
+      query: { value: string };
+    };
+    const { query } = form;
+
+    if (query.value === '') {
+      router.push('/schedule/list/');
+    } else {
+      router.push(`/schedule/list/?q=${query.value}`);
+    }
+  }
+
+  // カレンダーを表示しているページでは、日付変更のナビと現在の日付をヘッダーに表示する。
   let Nav = null; // ヘッダーのナビ（矢印）でカレンダーの月を移動
   let YearMonth = null; // 現在の年月
   if (year && month) {
@@ -46,12 +66,27 @@ const Header: React.FC = () => {
     );
   }
 
+  // スケジュールの検索窓
+  const Search = (
+    <StyledSearchContainer>
+      <form onSubmit={handleSubmit}>
+        <input type="text" name="query" placeholder="検索" />
+        <Button>検索</Button>
+      </form>
+    </StyledSearchContainer>
+  );
+
   return (
     <StyledHeader>
-      <h1>カレンダー</h1>
+      <Link href="/">
+        <a>
+          <h1>カレンダー</h1>
+        </a>
+      </Link>
       <StyledTodayButton ml="20px">今日</StyledTodayButton>
       {Nav}
       {YearMonth}
+      {Search}
     </StyledHeader>
   );
 };
@@ -61,11 +96,14 @@ const Header: React.FC = () => {
 //-----------------------------------------------------
 
 const StyledHeader = styled.header`
+  position: sticky;
+  top: 0;
   display: flex;
   align-items: center;
   height: 80px;
   padding: 0 20px;
   border-bottom: 1px solid #ccc;
+  background-color: #fff;
 
   h1 {
     font-size: 2rem;
@@ -93,6 +131,21 @@ const StyledArrow = styled.button<{ direction?: string }>`
 const StyledYearMonth = styled.div`
   font-size: 1.8rem;
   margin-left: 15px;
+`;
+
+const StyledSearchContainer = styled.div`
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+
+  input {
+    border: 1px solid #ccc;
+    padding: 5px 8px;
+  }
+
+  ${Button} {
+    margin-left: 10px;
+  }
 `;
 
 export default Header;

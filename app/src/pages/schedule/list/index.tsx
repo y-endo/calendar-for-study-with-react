@@ -1,8 +1,9 @@
 import React from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import useSWR from 'swr';
-import { MicroCMSListResponse } from 'microcms-js-sdk';
+import { MicroCMSListResponse, MicroCMSQueries } from 'microcms-js-sdk';
 
 import TSchedule from '~/types/Schedule';
 
@@ -15,17 +16,22 @@ import microCMSClient from '~/utils/microCMSClient';
  * スケジュールデータを取得する
  * @param endpoint
  */
-const scheduleFetcher = (endpoint: string) =>
+const scheduleFetcher = (endpoint: string, queries: MicroCMSQueries) =>
   microCMSClient.get<MicroCMSListResponse<TSchedule>>({
     endpoint,
-    queries: {
-      orders: 'date',
-      limit: 50
-    }
+    queries
   });
 
 const ScheduleListPage: NextPage = () => {
-  const { data: schedule, error: scheduleError } = useSWR('schedule', scheduleFetcher, {
+  const router = useRouter();
+  const queries: MicroCMSQueries = {
+    orders: 'date',
+    limit: 50
+  };
+  if (router.query.q) {
+    queries.q = String(router.query.q);
+  }
+  const { data: schedule, error: scheduleError } = useSWR(['schedule', queries], scheduleFetcher, {
     revalidateIfStale: false,
     revalidateOnFocus: false,
     revalidateOnReconnect: false
@@ -48,7 +54,9 @@ const ScheduleListPage: NextPage = () => {
 
   return (
     <DefaultLayout>
-      <Head>スケジュール一覧</Head>
+      <Head>
+        <title>スケジュール一覧</title>
+      </Head>
       <ScheduleList data={scheduleList} />
     </DefaultLayout>
   );
