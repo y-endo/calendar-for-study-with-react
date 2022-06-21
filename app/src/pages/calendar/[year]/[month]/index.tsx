@@ -4,20 +4,18 @@ import Head from 'next/head';
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import useSWR from 'swr';
-import { MicroCMSListResponse } from 'microcms-js-sdk';
+import { useSelector, useDispatch } from 'react-redux';
+import { MicroCMSQueries } from 'microcms-js-sdk';
 
 import TSchedule from '~/types/Schedule';
 
 import DefaultLayout from '~/components/layouts/Default';
 import CalendarMonth from '~/components/Calendar/month';
 
-import microCMSClient from '~/utils/microCMSClient';
+import { RootState, AppDispatch } from '~/stores';
+import { setMonthCalendarQueries } from '~/stores/microCMSQueries';
 
-/**
- * スケジュールデータを取得する
- * @param endpoint
- */
-const fetcher = (endpoint: string) => microCMSClient.get<MicroCMSListResponse<TSchedule>>({ endpoint });
+import { schedulesFetcher } from '~/utils/fetcher';
 
 /**
  * カレンダーページ
@@ -25,43 +23,65 @@ const fetcher = (endpoint: string) => microCMSClient.get<MicroCMSListResponse<TS
 const CalendarMonthPage: NextPage = () => {
   const router = useRouter();
   const { year, month } = router.query;
-  const { data, error } = useSWR('schedule', fetcher, {
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false
-  });
-  let scheduleContents: TSchedule[] = [];
+  const dispatch = useDispatch<AppDispatch>();
+  const queries = useSelector((state: RootState) => state.microCMSQueries.monthCalendar);
 
-  // urlが/calendar/yyyy/mm or m/ 形式じゃない場合リダイレクト
   React.useEffect(() => {
     if (year && month) {
+      // urlが/calendar/yyyy/mm or m/ 形式ではない場合リダイレクト
       if (!(isNaN(Number(year)) || isNaN(Number(month)))) {
-        // /yyyy/ が4桁じゃない or 1950 より小さい or 2100 より大きい
+        // /yyyy/ が4桁ではない or 1950 より小さい or 2100 より大きい
         if (year.length !== 4 || Number(year) <= 1950 || Number(year) >= 2100) {
           router.replace('/');
         }
-        if (month.length > 2 || parseInt(String(month), 10) > 12) {
+        // /mm/ が2桁以上 or 1 より小さい or 12 より大きい
+        if (month.length > 2 || parseInt(String(month), 10) < 1 || parseInt(String(month), 10) > 12) {
           router.replace('/');
         }
+
+        // urlに問題がなければmicroCMSのqueryを設定
+        // 取得するデータの範囲を今年と昨年末・来年始のデータに絞る
+        let filters: MicroCMSQueries['filters'] = '';
+        const intYear = parseInt(String(year), 10);
+        filters += `startDate[greater_than]${intYear - 1}-12[and]startDate[less_than]${intYear + 1}-01`;
+
+        const queries: MicroCMSQueries = {
+          limit: 1000,
+          filters
+        };
+
+        dispatch(setMonthCalendarQueries(queries));
       } else {
         router.replace('/');
       }
     }
-  }, [router, year, month]);
+  }, [router, year, month, dispatch]);
 
-  // microCMSからスケジュールデータ取得
+  const { data, error } = useSWR(['schedule', queries], schedulesFetcher, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false
+  });
+
+  let scheduleContents: TSchedule[] = [];
+
+  // 予定データの取得に失敗
   if (error) {
     scheduleContents = [
       {
         id: 'error',
-        date: '',
+        startDate: '',
         title: '通信エラー'
       }
     ];
   }
+  // 予定データの取得
   if (data) {
     scheduleContents = data.contents;
   }
+
+  // router.queryが未取得の場合はなにも描画しない
+  if (!(year && month)) return null;
 
   return (
     <DefaultLayout>

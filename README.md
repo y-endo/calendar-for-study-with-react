@@ -2,16 +2,17 @@
 ## 作るもの
 - 一般的なカレンダーアプリと同様の見た目（Googleカレンダー参考）
   - 最小で月表示のカレンダー、余裕があれば年・月・週の見た目を切り替え可能にする
-- CMS と連携してスケジュールデータを取得
+- CMS と連携して予定データを取得
   - アプリケーションから CMS にデータを登録できる機能をつける
     - 作成・更新・削除
   - 折角microCMSを使うので下書きの保存とかもできるようにする
 - 作成するページ
   - カレンダーページ（トップページ）
-  - スケジュール一覧ページ
-  - スケジュール詳細ページ（編集）
-- スケジュール登録時のバリデーション機能
-- スケジュールの検索機能
+  - 予定一覧ページ
+  - 予定詳細ページ（編集）
+- 予定登録時のバリデーション機能
+  - react-hook-formを採用。
+- 予定の検索機能
 - ReactTestingLibrary + Jest のテスト導入
   - 余裕があればCypressのテスト導入
 - microCMSのWebhookでアプリケーション側の自動更新機能
@@ -25,13 +26,16 @@
 > npx create-next-app app --typescript
 > typescript+eslint もいれてくれる
 
-登録スケジュール  
+登録予定  
 - 日時（必須）
+  - 開始
+  - 終了
 - タイトル（必須）
 - 場所
 - 重要フラグ
 - 説明
 - 添付画像（3枚まで）
+  - （POST非対応、管理画面からの登録のみ可能）
 
 microCMSのAPI通信公式モジュール  
 「microcms-js-sdk」  
@@ -69,3 +73,8 @@ microCMSの通信パターン
 - PUT: endpoint/content_idで指定したIDのデータを作成（POSTとの違いはIDの指定）
 - PATCH: 更新
 - DELETE: 削除
+
+GETのfiltersクエリで複数条件を設定する方法  
+[or]でOR、[and]でAND条件が設定できる。  
+例） /api/v1/articles?filters=title[contains]特集[or]publishedAt[begins_with]2019-12  
+https://blog.microcms.io/or-condition-in-filters/

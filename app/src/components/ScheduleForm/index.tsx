@@ -1,116 +1,130 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useSWRConfig } from 'swr';
-import { useDispatch } from 'react-redux';
 
-import TSchedule from '~/types/Schedule';
+import { useForm, SubmitHandler } from 'react-hook-form';
 
-import { Button } from '~/components/common/Button';
-
-import { addMessage } from '~/stores/message';
-import { AppDispatch } from '~/stores';
+import Button from '~/components/Button';
+import Flex from '~/components/Flex';
 
 import { Margin } from '~/utils/style';
 
+export interface IScheduleFormInput {
+  startDate: string;
+  endDate?: string;
+  title: string;
+  place?: string;
+  isImportant?: boolean;
+  description?: string;
+}
+
 /**
  * Props
- * date: スケジュールを登録する日時
- * closeParentModal: モーダル内に表示されている場合、親モーダルを閉じる関数
+ * date: 予定を登録する日時
  */
 type Props = {
-  date?: string;
-  closeParentModal?: Function;
+  disabled?: boolean;
+  defaultValue?: {
+    startDate?: string;
+    endDate?: string;
+    title?: string;
+    place?: string;
+    isImportant?: boolean;
+    description?: string;
+  };
+  submitText?: string;
+  submitCallback?: (data: IScheduleFormInput) => void;
 };
 
 /**
- * スケジュールを登録するフォーム
+ * 予定を登録するフォーム
  */
-const ScheduleForm: React.FC<Props> = ({ date, closeParentModal }) => {
-  const hasDateProps = typeof date === 'string' && date !== '';
-  const { mutate } = useSWRConfig();
-  const [isFetching, setIsFetching] = React.useState(false);
-  const dispatch = useDispatch<AppDispatch>();
+const ScheduleForm: React.FC<Props> = ({ disabled, defaultValue, submitText = '登録', submitCallback }) => {
+  const [isEndDateVisible, setIsEndDateVisible] = React.useState(typeof defaultValue?.endDate === 'string');
+  const { register, handleSubmit } = useForm<IScheduleFormInput>();
 
-  function registerSchedule(data: Omit<TSchedule, 'id'>) {
-    return fetch('https://calendar.microcms.io/api/v1/schedule', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-MICROCMS-API-KEY': process.env.API_KEY || ''
-      },
-      body: JSON.stringify(data)
-    });
+  /**
+   * 終了日時を追加するクリック
+   */
+  function handleAddEndDateClick() {
+    setIsEndDateVisible(true);
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    let isSuccess = false;
-    const form = event.target as typeof event.target & {
-      date: { value: string };
-      title: { value: string };
-      place: { value: string };
-      isImportant: { checked: boolean };
-      description: { value: string };
+  /**
+   * 終了日時を削除するクリック
+   */
+  function handleDeleteEndDateClick() {
+    setIsEndDateVisible(false);
+  }
+
+  /**
+   * 登録サブミットイベントハンドラ
+   * 入力バリデーションを行い、propsのsubmitCallbackにデータを渡す。
+   * @param data
+   */
+  const onSubmit: SubmitHandler<IScheduleFormInput> = async data => {
+    const { startDate, endDate } = data;
+
+    // 日時をdatetime-localで入力しているので、データ送信前にタイムゾーンの設定を行う。（-9時間）
+    data = {
+      ...data,
+      startDate: `${startDate}:00+09:00`,
+      endDate: endDate ? `${endDate}:00+09:00` : undefined
     };
-    const { date, title, place, isImportant, description } = form;
-
-    if (date.value === '' || title.value === '') return;
-
-    setIsFetching(true);
-    const registered = await registerSchedule({
-      date: date.value,
-      title: title.value,
-      place: place.value,
-      isImportant: isImportant.checked,
-      description: description.value
-    });
-    if (registered.status === 201) {
-      dispatch(
-        addMessage({
-          id: new Date().getTime(),
-          text: `${date.value}に${title.value}の予定を登録しました`,
-          autoDelete: true,
-          autoDeleteTime: 4000
-        })
-      );
-      isSuccess = true;
-      mutate('schedule');
+    // 終了日時を非表示にしている場合は登録データから削除
+    if (!isEndDateVisible) {
+      data.endDate = undefined;
     }
-    setIsFetching(false);
 
-    if (isSuccess && closeParentModal) {
-      closeParentModal();
+    if (submitCallback) {
+      submitCallback(data);
     }
-  }
+  };
 
   return (
-    <StyledForm onSubmit={handleSubmit} disabled={isFetching}>
+    <StyledForm onSubmit={handleSubmit(onSubmit)} disabled={disabled}>
       <StyledFieldSet>
         <legend>
           日時<span>必須</span>
         </legend>
-        {hasDateProps ? <input type="date" name="date" readOnly value={date} /> : <input type="date" name="date" />}
+        <Flex alignItems="center">
+          <input type="datetime-local" {...register('startDate', { required: true })} defaultValue={defaultValue?.startDate || ''} />
+          {!isEndDateVisible && (
+            <Button size="small" type="button" mt="8px" ml="10px" onClick={handleAddEndDateClick}>
+              終了日時を追加する
+            </Button>
+          )}
+        </Flex>
+        {isEndDateVisible && (
+          <StyledEndDate>
+            <Flex alignItems="center">
+              <input type="datetime-local" {...register('endDate')} defaultValue={defaultValue?.endDate || defaultValue?.startDate || ''} />
+              <Button size="small" type="button" mt="8px" ml="10px" onClick={handleDeleteEndDateClick}>
+                終了日時を削除する
+              </Button>
+            </Flex>
+          </StyledEndDate>
+        )}
       </StyledFieldSet>
       <StyledFieldSet>
         <legend>
           タイトル<span>必須</span>
         </legend>
-        <input type="text" name="title" />
+        <input type="text" {...register('title', { required: true })} defaultValue={defaultValue?.title} />
       </StyledFieldSet>
       <StyledFieldSet>
         <legend>場所</legend>
-        <input type="text" name="place" />
+        <input type="text" {...register('place')} defaultValue={defaultValue?.place} />
       </StyledFieldSet>
       <StyledFieldSet>
         <legend>重要な予定</legend>
-        <input type="checkbox" name="isImportant" />
+        <input type="checkbox" {...register('isImportant')} defaultChecked={defaultValue?.isImportant} />
       </StyledFieldSet>
       <StyledFieldSet>
         <legend>説明</legend>
-        <textarea name="description"></textarea>
+        <textarea {...register('description')} defaultValue={defaultValue?.description}></textarea>
       </StyledFieldSet>
       <Margin mt={'20px'}>
-        <Button>登録</Button>
+        <Button>{submitText}</Button>
       </Margin>
     </StyledForm>
   );
@@ -144,8 +158,6 @@ const StyledForm = styled.form<{
 `;
 
 const StyledFieldSet = styled.fieldset`
-  display: flex;
-  align-items: flex-start;
   font-size: 1.6rem;
   margin-top: 15px;
 
@@ -153,17 +165,29 @@ const StyledFieldSet = styled.fieldset`
     margin-top: 0;
   }
 
-  > legend {
+  legend {
     font-weight: bold;
-    width: 150px;
     > span {
       margin-left: 8px;
       color: red;
     }
   }
-  > :is(input, textarea) {
+  input:not([type='checkbox']),
+  textarea {
+    width: 100%;
     border: 1px solid #ccc;
     margin-top: 8px;
+    padding: 5px;
+  }
+`;
+
+const StyledEndDate = styled.div`
+  &::before {
+    content: '';
+    display: block;
+    height: 12px;
+    margin: 8px auto 0 30px;
+    border-left: 1px solid #ccc;
   }
 `;
 

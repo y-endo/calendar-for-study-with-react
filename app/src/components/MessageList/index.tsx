@@ -3,8 +3,7 @@ import styled from 'styled-components';
 import { rgba } from 'polished';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { RootState } from '~/stores';
-import { AppDispatch } from '~/stores';
+import { RootState, AppDispatch } from '~/stores';
 import { deleteMessage } from '~/stores/message';
 
 /**
@@ -37,7 +36,7 @@ const Message: React.FC<Props> = ({ data }) => {
         dispatch(deleteMessage(data.id));
       }, data.autoDeleteTime);
     }
-  }, []);
+  }, [data, dispatch]);
 
   /**
    * メッセージ本体のクリックイベントハンドラ

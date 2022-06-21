@@ -4,13 +4,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import useSWR from 'swr';
 
-import type { TNow } from '~/pages/api/now';
-
-/**
- * 今日の日付を取得する
- * @param endpoint
- */
-const fetcher = (endpoint: string): Promise<TNow> => fetch(endpoint).then(res => res.json());
+import { nowFetcher } from '~/utils/fetcher';
 
 /**
  * トップページ
@@ -18,7 +12,7 @@ const fetcher = (endpoint: string): Promise<TNow> => fetch(endpoint).then(res =>
  */
 const Home: NextPage = () => {
   const router = useRouter();
-  const { data, error } = useSWR('/api/now', fetcher, {
+  const { data, error } = useSWR('/api/now', nowFetcher, {
     revalidateIfStale: false,
     revalidateOnFocus: false,
     revalidateOnReconnect: false

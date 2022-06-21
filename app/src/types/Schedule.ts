@@ -1,6 +1,7 @@
 type TSchedule = {
   id: string;
-  date: string;
+  startDate: string;
+  endDate?: string;
   title: string;
   place?: string;
   isImportant?: boolean;

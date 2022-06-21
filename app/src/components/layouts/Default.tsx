@@ -1,6 +1,6 @@
 import type React from 'react';
 
-import Header from '~/components/common/Header';
+import Header from '~/components/Header';
 import MessageList from '~/components/MessageList';
 
 /**

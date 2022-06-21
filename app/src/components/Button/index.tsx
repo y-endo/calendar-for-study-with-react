@@ -1,13 +1,16 @@
 import styled from 'styled-components';
+import { Margin } from '~/utils/style';
 
 /**
  * 汎用ボタン
+ * color,size を設定可能。
+ * utilsのMarginを継承。
  */
 type ButtonProps = {
   color?: 'primary' | 'secondary';
   size?: 'large' | 'small';
 };
-export const Button = styled.button<ButtonProps>`
+const Button = Margin.withComponent(styled.button<ButtonProps>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -60,4 +63,6 @@ export const Button = styled.button<ButtonProps>`
   &:hover {
     filter: brightness(1.1);
   }
-`;
+`);
+
+export default Button;

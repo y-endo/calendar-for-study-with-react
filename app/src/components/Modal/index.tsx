@@ -55,8 +55,7 @@ const StyledModal = styled.div`
 
 const StyledModalInner = styled.div`
   position: relative;
-  width: 1000px;
-  padding: 50px 20px;
+  padding: 50px 20px 30px;
   background: #fff;
 `;
 

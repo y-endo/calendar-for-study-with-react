@@ -1,22 +1,27 @@
 import React from 'react';
 import styled from 'styled-components';
 import useSWR from 'swr';
+import { useDispatch } from 'react-redux';
 
 import TSchedule from '~/types/Schedule';
-import type { TNow } from '~/pages/api/now';
 
-import { Button } from '~/components/common/Button';
+import Button from '~/components/Button';
+import EditButton from '~/components/Button/edit';
+import DeleteButton from '~/components/Button/delete';
+import Flex from '~/components/Flex';
 import Modal from '~/components/Modal';
-import ScheduleForm from '~/components/ScheduleForm';
-import ScheduleDetail from '~/components/ScheduleDetail';
+import ScheduleForm, { IScheduleFormInput } from '~/components/ScheduleForm';
+import ScheduleSummary from '~/components/ScheduleSummary';
 
-import { Margin } from '~/utils/style';
+import { AppDispatch } from '~/stores';
+import { addMessage } from '~/stores/message';
 
-/**
- * 今日の日付を取得する
- * @param endpoint
- */
-const fetcher = (endpoint: string): Promise<TNow> => fetch(endpoint).then(res => res.json());
+import getMonthCalendarData, { TMonthCalendar } from '~/utils/getMonthCalendarData';
+import { nowFetcher } from '~/utils/fetcher';
+import { postSchedule } from '~/utils/microCMS';
+import { monthScheduleMutate } from '~/utils/swrMutate';
+import arrayChunk from '~/utils/arrayChunk';
+import formatDate from '~/utils/formatDate';
 
 /**
  * Props
@@ -37,23 +42,17 @@ type Props = {
 const CalendarMonth: React.FC<Props> = props => {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = React.useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const selectedDate = React.useRef('');
   const selectedId = React.useRef('');
-  let { data: now, error: nowError } = useSWR('/api/now', fetcher, {
+  let { data: now, error: nowError } = useSWR('/api/now', nowFetcher, {
     revalidateIfStale: false,
     revalidateOnFocus: false,
     revalidateOnReconnect: false
   });
+  const calendarDataArray = arrayChunk(getMonthCalendarData(props.year, props.month), 7);
   const week = ['日', '月', '火', '水', '木', '金', '土'];
-  const year = props.year;
-  const month = props.month;
-  const lastMonth = month === 1 ? 12 : month - 1;
-  const nextMonth = month === 12 ? 1 : month + 1;
-  const startDayOfWeek = new Date(year, month - 1, 1).getDay();
-  const endDate = new Date(year, month - 2, 0).getDate();
-  const lastMonthEndDate = new Date(year, month, 0).getDate();
-  const rowLength = 6; // 行の数を6で固定する
-  let count = 0; // 月カレンダー表を作成するループ中の現在位置
+  const dispatch = useDispatch<AppDispatch>();
 
   // サーバー（API）から今日の日付を取得、失敗した場合はローカル時間。
   if (nowError) {
@@ -72,22 +71,17 @@ const CalendarMonth: React.FC<Props> = props => {
   function handleRegisterClick(event: React.MouseEvent) {
     const date = event.currentTarget.closest('[data-date]')?.getAttribute('data-date');
     if (date) {
-      selectedDate.current = date;
+      selectedDate.current = `${date}T00:00`;
     }
 
     setIsRegisterModalOpen(true);
   }
 
   /**
-   * カレンダー表上の予定リストのクリックイベントハンドラ
+   * カレンダー表上の予定クリックイベントハンドラ
    * @param event イベント引数
    */
   function handleScheduleClick(event: React.MouseEvent) {
-    const date = event.currentTarget.closest('[data-date]')?.getAttribute('data-date');
-    if (date) {
-      selectedDate.current = date;
-    }
-
     const id = event.currentTarget.getAttribute('data-id');
     if (id) {
       selectedId.current = id;
@@ -95,6 +89,54 @@ const CalendarMonth: React.FC<Props> = props => {
 
     setIsUpdateModalOpen(true);
   }
+
+  /**
+   * 予定登録Submitのコールバック関数
+   */
+  const submitRegisterCallback = React.useCallback(
+    async (data: IScheduleFormInput) => {
+      setIsSubmitting(true);
+
+      // microCMSに予定を登録する（POST）
+      let isSuccess = false;
+      const { startDate, title } = data;
+      const posted = await postSchedule(data);
+      setIsSubmitting(false);
+      if (posted.status === 201) {
+        // 成功のメッセージを表示
+        dispatch(
+          addMessage({
+            id: new Date().getTime(),
+            text: `${startDate.replace(/T.*/, '')}に${title}の予定を登録しました`,
+            autoDelete: true,
+            autoDeleteTime: 4000
+          })
+        );
+        isSuccess = true;
+
+        // 月カレンダーページに表示する予定を更新する。
+        monthScheduleMutate();
+      }
+
+      // データ登録に成功した場合はモーダルを閉じる
+      if (isSuccess) {
+        setIsRegisterModalOpen(false);
+      }
+    },
+    [dispatch]
+  );
+
+  /**
+   * 予定削除Submitのコールバック関数
+   */
+  const submitDeleteCallback = React.useCallback((isSuccess: boolean) => {
+    if (isSuccess) {
+      // 月カレンダーページに表示する予定を更新する。
+      monthScheduleMutate();
+      // モーダルを閉じる
+      setIsUpdateModalOpen(false);
+    }
+  }, []);
 
   // 表の1行目に曜日を表示
   const weekView = (
@@ -108,48 +150,20 @@ const CalendarMonth: React.FC<Props> = props => {
   );
 
   // カレンダーの表を作成
-  const bodyView = [];
-  for (let i = 0; i < rowLength; i++) {
+  const bodyView: JSX.Element[] = [];
+  calendarDataArray.forEach((calendarData: TMonthCalendar[], i) => {
     bodyView.push(
       <StyledRow key={`row-${i}`}>
-        {week.map((_, dayIndex) => {
-          let currentDayNumber = -1;
-          let isThisMonth = true;
-          let isToday = false;
-          let datasetDate = '';
+        {calendarData.map(({ year, month, date }, index) => {
+          const datasetDate = `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+          const isToday = now && year === now.year && month === now.month && date === now.date;
 
-          if (i == 0 && dayIndex < startDayOfWeek) {
-            // 先月末の日にち
-            currentDayNumber = lastMonthEndDate - startDayOfWeek + dayIndex + 1;
-            isThisMonth = false;
-            datasetDate = `${year}-${String(lastMonth).padStart(2, '0')}-${String(currentDayNumber).padStart(2, '0')}`;
-          } else if (count >= endDate) {
-            // 来月頭の日にち
-            count++;
-            currentDayNumber = count - endDate;
-            isThisMonth = false;
-            datasetDate = `${year}-${String(nextMonth).padStart(2, '0')}-${String(currentDayNumber).padStart(2, '0')}`;
-          } else {
-            // 今月の日にち
-            count++;
-            if (now) {
-              if (year == now.year && month == now.month && count == now.date) {
-                isToday = true;
-              }
-            }
-            currentDayNumber = count;
-            datasetDate = `${year}-${String(month).padStart(2, '0')}-${String(currentDayNumber).padStart(2, '0')}`;
-          }
-
-          // カレンダーのマスに表示するスケジュール一覧
+          // カレンダーのマスに表示する予定一覧
           const scheduleList: JSX.Element[] = [];
           if (props.schedule) {
             props.schedule.forEach(item => {
-              const date = new Date(item.date);
-              const isMatch =
-                (year == date.getFullYear() && month == date.getMonth() + 1 && currentDayNumber == date.getDate()) ||
-                (year == date.getFullYear() && lastMonth == date.getMonth() + 1 && currentDayNumber == date.getDate()) ||
-                (year == date.getFullYear() && nextMonth == date.getMonth() + 1 && currentDayNumber == date.getDate());
+              const scheduleDate = formatDate(new Date(item.startDate));
+              const isMatch = datasetDate === scheduleDate.string.replace(/T.*/, '');
               if (isMatch) {
                 scheduleList.push(
                   <StyledScheduleItem key={`item-${item.id}`} isImportant={item.isImportant} data-id={item.id} onClick={handleScheduleClick}>
@@ -161,22 +175,20 @@ const CalendarMonth: React.FC<Props> = props => {
           }
 
           return (
-            <StyledCell key={`date-${dayIndex}`}>
-              <StyledCellContent today={isToday} thisMonth={isThisMonth} data-date={datasetDate}>
-                <StyledDayNumber>{currentDayNumber}</StyledDayNumber>
+            <StyledCell key={`date-${index}`}>
+              <StyledCellContent today={isToday} thisMonth={month === props.month} data-date={datasetDate}>
+                <StyledDayNumber>{date}</StyledDayNumber>
                 {scheduleList.length > 0 && <StyledScheduleList>{scheduleList}</StyledScheduleList>}
-                <Margin mt="auto" mr="auto" ml="auto">
-                  <Button size="small" onClick={handleRegisterClick}>
-                    予定を登録する
-                  </Button>
-                </Margin>
+                <Button size="small" mt="auto" mr="auto" ml="auto" onClick={handleRegisterClick}>
+                  予定を登録する
+                </Button>
               </StyledCellContent>
             </StyledCell>
           );
         })}
       </StyledRow>
     );
-  }
+  });
 
   return (
     <>
@@ -185,10 +197,18 @@ const CalendarMonth: React.FC<Props> = props => {
         <StyledTableBody>{bodyView}</StyledTableBody>
       </StyledTable>
       <Modal isOpen={isRegisterModalOpen} setIsOpen={setIsRegisterModalOpen}>
-        <ScheduleForm date={selectedDate.current} />
+        <StyledFormContainer>
+          <ScheduleForm disabled={isSubmitting} defaultValue={{ startDate: selectedDate.current }} submitCallback={submitRegisterCallback} />
+        </StyledFormContainer>
       </Modal>
       <Modal isOpen={isUpdateModalOpen} setIsOpen={setIsUpdateModalOpen}>
-        <ScheduleDetail contentId={selectedId.current} />
+        <>
+          <Flex alignItems="center" mb="15px">
+            <EditButton contentId={selectedId.current} />
+            <DeleteButton contentId={selectedId.current} submitCallback={submitDeleteCallback} />
+          </Flex>
+          <ScheduleSummary contentId={selectedId.current} />
+        </>
       </Modal>
     </>
   );
@@ -295,6 +315,10 @@ const StyledScheduleItem = styled.li<{
   background-color: ${props => (props.isImportant ? props.theme.palette.primary.dark : props.theme.palette.primary.light)};
   color: #fff;
   cursor: pointer;
+`;
+
+const StyledFormContainer = styled.div`
+  width: 420px;
 `;
 
 export default CalendarMonth;

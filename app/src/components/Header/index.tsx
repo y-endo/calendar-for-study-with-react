@@ -2,10 +2,10 @@ import type React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import useSWR from 'swr';
 
-import { Button } from '~/components/common/Button';
-
-import { Margin } from '~/utils/style';
+import Button from '~/components/Button';
+import { nowFetcher } from '~/utils/fetcher';
 
 /**
  * 共通ヘッダー
@@ -13,9 +13,23 @@ import { Margin } from '~/utils/style';
 const Header: React.FC = () => {
   const router = useRouter();
   const { year, month } = router.query;
+  let { data: now, error: nowError } = useSWR('/api/now', nowFetcher, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false
+  });
+
+  // サーバー（API）から今日の日付を取得、失敗した場合はローカル時間。
+  if (nowError) {
+    const nowDate = new Date();
+    now = {
+      year: nowDate.getFullYear(),
+      month: nowDate.getMonth() + 1
+    };
+  }
 
   /**
-   * スケジュール検索のsubmitイベントハンドラ
+   * 予定検索のsubmitイベントハンドラ
    * @param event
    */
   function handleSubmit(event: React.FormEvent) {
@@ -29,7 +43,7 @@ const Header: React.FC = () => {
     if (query.value === '') {
       router.push('/schedule/list/');
     } else {
-      router.push(`/schedule/list/?q=${query.value}`);
+      router.push(`/schedule/list/?q=${query.value}&p=1`);
     }
   }
 
@@ -66,12 +80,25 @@ const Header: React.FC = () => {
     );
   }
 
-  // スケジュールの検索窓
+  // 「今日」ボタン
+  // 今日の日付を取得できている場合はリンク、それまではただの飾りボタン
+  const TodayButton =
+    now && now.year && now.month ? (
+      <Link href={`/calendar/${now.year}/${now.month}`} passHref>
+        <Button as="a" ml="20px">
+          今日
+        </Button>
+      </Link>
+    ) : (
+      <Button ml="20px">今日</Button>
+    );
+
+  // 予定の検索窓
   const Search = (
     <StyledSearchContainer>
       <form onSubmit={handleSubmit}>
-        <input type="text" name="query" placeholder="検索" />
-        <Button>検索</Button>
+        <input type="text" name="query" placeholder="予定検索" />
+        <Button ml="10px">検索</Button>
       </form>
     </StyledSearchContainer>
   );
@@ -83,7 +110,7 @@ const Header: React.FC = () => {
           <h1>カレンダー</h1>
         </a>
       </Link>
-      <StyledTodayButton ml="20px">今日</StyledTodayButton>
+      {TodayButton}
       {Nav}
       {YearMonth}
       {Search}
@@ -110,8 +137,6 @@ const StyledHeader = styled.header`
     font-weight: bold;
   }
 `;
-
-const StyledTodayButton = Margin.withComponent(Button);
 
 const StyledNav = styled.div`
   display: flex;
@@ -141,10 +166,6 @@ const StyledSearchContainer = styled.div`
   input {
     border: 1px solid #ccc;
     padding: 5px 8px;
-  }
-
-  ${Button} {
-    margin-left: 10px;
   }
 `;
 

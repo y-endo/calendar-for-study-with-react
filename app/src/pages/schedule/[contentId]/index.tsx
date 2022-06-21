@@ -8,13 +8,13 @@ import { MicroCMSListContent, MicroCMSListResponse } from 'microcms-js-sdk';
 import TSchedule from '~/types/Schedule';
 
 import DefaultLayout from '~/components/layouts/Default';
-import { Button } from '~/components/common/Button';
+import ScheduleForm, { IScheduleFormInput } from '~/components/ScheduleForm';
 
 import { AppDispatch } from '~/stores';
 import { addMessage } from '~/stores/message';
 
-import { Margin } from '~/utils/style';
-import microCMSClient from '~/utils/microCMSClient';
+import { patchSchedule, microCMSClient } from '~/utils/microCMS';
+import formatDate from '~/utils/formatDate';
 
 type Props = InferGetStaticPropsType<typeof getStaticProps>;
 
@@ -33,7 +33,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const isProd = process.env.NODE_ENV === 'production';
-  // スケジュールデータ全取得
+  // 予定データ全取得
   const schedule = await microCMSClient.get<MicroCMSListResponse<TSchedule>>({
     endpoint: 'schedule'
   });
@@ -54,98 +54,59 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 /**
- * スケジュール詳細（編集）ページ
+ * 予定詳細（編集）ページ
  */
 const SchedulePage: NextPage<Props> = ({ schedule }) => {
-  const [isFetching, setIsFetching] = React.useState(false);
-  const date = new Date(schedule.date);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const startDate = formatDate(new Date(schedule.startDate));
+  const endDate = schedule.endDate ? formatDate(new Date(schedule.endDate)) : null;
   const dispatch = useDispatch<AppDispatch>();
 
-  function updateSchedule(data: Omit<TSchedule, 'id'>) {
-    return fetch(`https://calendar.microcms.io/api/v1/schedule/${schedule.id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-MICROCMS-API-KEY': process.env.API_KEY || ''
-      },
-      body: JSON.stringify(data)
-    });
-  }
+  // ScheduleFormに渡すmicroCMS登録データ
+  const defaultValue = {
+    startDate: startDate.string,
+    endDate: endDate ? endDate.string : '',
+    title: schedule.title,
+    place: schedule.place || '',
+    isImportant: schedule.isImportant || false,
+    description: schedule.description || ''
+  };
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    const form = event.target as typeof event.target & {
-      date: { value: string };
-      title: { value: string };
-      place: { value: string };
-      isImportant: { checked: boolean };
-      description: { value: string };
-    };
-    const { date, title, place, isImportant, description } = form;
+  /**
+   * 予定更新Submitのコールバック関数
+   */
+  const submitCallback = React.useCallback(
+    async (data: IScheduleFormInput) => {
+      setIsSubmitting(true);
 
-    if (date.value === '' || title.value === '') return;
+      // microCMSの予定を更新する（PATCH）
+      const posted = await patchSchedule(schedule.id, data);
+      if (posted.status === 200) {
+        // 成功のメッセージを表示
+        dispatch(
+          addMessage({
+            id: new Date().getTime(),
+            text: `予定を更新しました`,
+            autoDelete: true,
+            autoDeleteTime: 4000
+          })
+        );
+      }
 
-    setIsFetching(true);
-    const updated = await updateSchedule({
-      date: date.value,
-      title: title.value,
-      place: place.value,
-      isImportant: isImportant.checked,
-      description: description.value
-    });
-    if (updated.status === 200) {
-      dispatch(
-        addMessage({
-          id: new Date().getTime(),
-          text: `予定を更新しました`,
-          autoDelete: true,
-          autoDeleteTime: 4000
-        })
-      );
-    }
-    setIsFetching(false);
-  }
+      setIsSubmitting(false);
+    },
+    [schedule.id, dispatch]
+  );
 
   return (
     <DefaultLayout>
       <Head>
         <title>{schedule.title}</title>
       </Head>
-      <StyledDetail>
-        <StyledForm onSubmit={handleSubmit} disabled={isFetching}>
-          <StyledFieldSet>
-            <legend>
-              日時<span>必須</span>
-            </legend>
-            <input
-              type="date"
-              name="date"
-              defaultValue={`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`}
-            />
-          </StyledFieldSet>
-          <StyledFieldSet>
-            <legend>
-              タイトル<span>必須</span>
-            </legend>
-            <input type="text" name="title" defaultValue={schedule.title} />
-          </StyledFieldSet>
-          <StyledFieldSet>
-            <legend>場所</legend>
-            <input type="text" name="place" defaultValue={schedule.place || ''} />
-          </StyledFieldSet>
-          <StyledFieldSet>
-            <legend>重要な予定</legend>
-            <input type="checkbox" name="isImportant" defaultChecked={schedule.isImportant || false} />
-          </StyledFieldSet>
-          <StyledFieldSet>
-            <legend>説明</legend>
-            <textarea name="description" defaultValue={schedule.description || ''}></textarea>
-          </StyledFieldSet>
-          <Margin mt={'20px'}>
-            <Button>更新</Button>
-          </Margin>
-        </StyledForm>
-      </StyledDetail>
+      <StyledFormContainer>
+        <ScheduleForm disabled={isSubmitting} defaultValue={defaultValue} submitText="更新" submitCallback={submitCallback} />
+      </StyledFormContainer>
     </DefaultLayout>
   );
 };
@@ -154,56 +115,10 @@ const SchedulePage: NextPage<Props> = ({ schedule }) => {
 // Styled
 //-----------------------------------------------------
 
-const StyledDetail = styled.div`
-  position: relative;
-  padding: 0 20px;
-`;
-
-const StyledForm = styled.form<{
-  disabled?: boolean;
-}>`
-  position: relative;
-
-  ${props =>
-    props.disabled &&
-    `
-      opacity: 0.5;
-
-      &::before {
-        content: '';
-        display: block;
-        position: absolute;
-        top: 0;
-        left: 0;
-        z-index: 1;
-        width: 100%;
-        height: 100%;
-      }
-    `}
-`;
-
-const StyledFieldSet = styled.fieldset`
-  display: flex;
-  align-items: flex-start;
-  font-size: 1.6rem;
-  margin-top: 15px;
-
-  &:first-of-type {
-    margin-top: 0;
-  }
-
-  > legend {
-    font-weight: bold;
-    width: 150px;
-    > span {
-      margin-left: 8px;
-      color: red;
-    }
-  }
-  > :is(input, textarea) {
-    border: 1px solid #ccc;
-    margin-top: 8px;
-  }
+const StyledFormContainer = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px;
 `;
 
 export default SchedulePage;

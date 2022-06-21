@@ -2,9 +2,11 @@ import { combineReducers } from 'redux';
 import { configureStore } from '@reduxjs/toolkit';
 
 import message from './message';
+import microCMSQueries from './microCMSQueries';
 
 const rootReducer = combineReducers({
-  message
+  message,
+  microCMSQueries
 });
 
 const store = configureStore({ reducer: rootReducer });

@@ -1,3 +1,7 @@
+/**
+ * 汎用的なstyled-componentsをまとめたもの
+ */
+
 import styled from 'styled-components';
 
 /**
