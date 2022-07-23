@@ -18,16 +18,7 @@ import { RootState, AppDispatch } from '~/stores';
 import { setScheduleListQueries } from '~/stores/microCMSQueries';
 
 import { microCMSClient } from '~/utils/microCMS';
-
-/**
- * 予定データを取得する
- * @param endpoint
- */
-const scheduleFetcher = (endpoint: string, queries: MicroCMSQueries) =>
-  microCMSClient.get<MicroCMSListResponse<TSchedule>>({
-    endpoint,
-    queries
-  });
+import { schedulesFetcher } from '~/utils/fetcher';
 
 const ScheduleListPage: NextPage = () => {
   const router = useRouter();
@@ -59,7 +50,7 @@ const ScheduleListPage: NextPage = () => {
     dispatch(setScheduleListQueries(queries));
   }, [router, dispatch, currentPage]);
 
-  const { data: schedule, error: scheduleError } = useSWR(['schedule', queries], scheduleFetcher, {
+  const { data: schedule, error: scheduleError } = useSWR(['schedule', queries], schedulesFetcher, {
     revalidateIfStale: false,
     revalidateOnFocus: false,
     revalidateOnReconnect: false

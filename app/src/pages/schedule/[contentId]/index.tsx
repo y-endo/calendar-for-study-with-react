@@ -1,11 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
-import { NextPage, InferGetStaticPropsType, GetStaticProps, GetStaticPaths } from 'next';
+import { NextPage } from 'next';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
+import useSWR from 'swr';
 import { useDispatch } from 'react-redux';
-import { MicroCMSListContent, MicroCMSListResponse } from 'microcms-js-sdk';
-
-import TSchedule from '~/types/Schedule';
 
 import DefaultLayout from '~/components/layouts/Default';
 import ScheduleForm, { IScheduleFormInput } from '~/components/ScheduleForm';
@@ -13,65 +12,23 @@ import ScheduleForm, { IScheduleFormInput } from '~/components/ScheduleForm';
 import { AppDispatch } from '~/stores';
 import { addMessage } from '~/stores/message';
 
-import { patchSchedule, microCMSClient } from '~/utils/microCMS';
+import { patchSchedule } from '~/utils/microCMS';
 import formatDate from '~/utils/formatDate';
-
-type Props = InferGetStaticPropsType<typeof getStaticProps>;
-
-export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const schedule = await microCMSClient.get<MicroCMSListContent & TSchedule>({
-    endpoint: 'schedule',
-    contentId: params ? String(params.contentId) : ''
-  });
-
-  return {
-    props: {
-      schedule
-    }
-  };
-};
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  const isProd = process.env.NODE_ENV === 'production';
-  // 予定データ全取得
-  const schedule = await microCMSClient.get<MicroCMSListResponse<TSchedule>>({
-    endpoint: 'schedule'
-  });
-
-  // 取得したデータのIDからページのパスを作成
-  const paths = schedule.contents.map(data => {
-    return {
-      params: {
-        contentId: data.id
-      }
-    };
-  });
-
-  return {
-    paths,
-    fallback: isProd ? false : 'blocking'
-  };
-};
+import { scheduleFetcher } from '~/utils/fetcher';
 
 /**
  * 予定詳細（編集）ページ
  */
-const SchedulePage: NextPage<Props> = ({ schedule }) => {
+const SchedulePage: NextPage | null = () => {
+  const router = useRouter();
+  const contentId = router.query.contentId as string;
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-
-  const startDate = formatDate(new Date(schedule.startDate));
-  const endDate = schedule.endDate ? formatDate(new Date(schedule.endDate)) : null;
+  const { data: schedule, error: scheduleError } = useSWR(['schedule', contentId], scheduleFetcher, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false
+  });
   const dispatch = useDispatch<AppDispatch>();
-
-  // ScheduleFormに渡すmicroCMS登録データ
-  const defaultValue = {
-    startDate: startDate.string,
-    endDate: endDate ? endDate.string : '',
-    title: schedule.title,
-    place: schedule.place || '',
-    isImportant: schedule.isImportant || false,
-    description: schedule.description || ''
-  };
 
   /**
    * 予定更新Submitのコールバック関数
@@ -81,7 +38,7 @@ const SchedulePage: NextPage<Props> = ({ schedule }) => {
       setIsSubmitting(true);
 
       // microCMSの予定を更新する（PATCH）
-      const posted = await patchSchedule(schedule.id, data);
+      const posted = await patchSchedule(contentId, data);
       if (posted.status === 200) {
         // 成功のメッセージを表示
         dispatch(
@@ -96,8 +53,26 @@ const SchedulePage: NextPage<Props> = ({ schedule }) => {
 
       setIsSubmitting(false);
     },
-    [schedule.id, dispatch]
+    [contentId, dispatch]
   );
+
+  if (!router.isReady || !schedule) return null;
+  if (scheduleError) {
+    return <div>通信エラー</div>;
+  }
+
+  const startDate = formatDate(new Date(schedule.startDate));
+  const endDate = schedule.endDate ? formatDate(new Date(schedule.endDate)) : null;
+
+  // ScheduleFormに渡すmicroCMS登録データ
+  const defaultValue = {
+    startDate: startDate.string,
+    endDate: endDate ? endDate.string : '',
+    title: schedule.title,
+    place: schedule.place || '',
+    isImportant: schedule.isImportant || false,
+    description: schedule.description || ''
+  };
 
   return (
     <DefaultLayout>
