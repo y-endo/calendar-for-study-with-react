@@ -27,9 +27,9 @@ type Props = {
 const DeleteButton: React.FC<Props> = ({ contentId, submitCallback }) => {
   const [isProcessing, setIsProcessing] = React.useState(false);
   const { data, error } = useSWR(['schedule', contentId], scheduleFetcher, {
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false
+    revalidateIfStale: false, // 古いデータがある場合に自動再検証
+    revalidateOnFocus: false, // ウィンドウがフォーカスされたときに自動的に再検証
+    revalidateOnReconnect: false // ブラウザがネットワーク接続を回復すると自動的に再検証
   });
   const dispatch = useDispatch<AppDispatch>();
 

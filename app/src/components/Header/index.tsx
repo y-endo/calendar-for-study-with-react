@@ -14,9 +14,9 @@ const Header: React.FC = () => {
   const router = useRouter();
   const { year, month } = router.query;
   let { data: now, error: nowError } = useSWR('/api/now', nowFetcher, {
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false
+    revalidateIfStale: false, // 古いデータがある場合に自動再検証
+    revalidateOnFocus: false, // ウィンドウがフォーカスされたときに自動的に再検証
+    revalidateOnReconnect: false // ブラウザがネットワーク接続を回復すると自動的に再検証
   });
 
   // サーバー（API）から今日の日付を取得、失敗した場合はローカル時間。

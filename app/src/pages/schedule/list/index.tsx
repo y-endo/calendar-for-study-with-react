@@ -6,7 +6,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import useSWR from 'swr';
 import { useSelector, useDispatch } from 'react-redux';
-import { MicroCMSListResponse, MicroCMSQueries } from 'microcms-js-sdk';
+import { MicroCMSQueries } from 'microcms-js-sdk';
 
 import TSchedule from '~/types/Schedule';
 
@@ -17,7 +17,6 @@ import Button from '~/components/Button';
 import { RootState, AppDispatch } from '~/stores';
 import { setScheduleListQueries } from '~/stores/microCMSQueries';
 
-import { microCMSClient } from '~/utils/microCMS';
 import { schedulesFetcher } from '~/utils/fetcher';
 
 const ScheduleListPage: NextPage = () => {
@@ -51,9 +50,10 @@ const ScheduleListPage: NextPage = () => {
   }, [router, dispatch, currentPage]);
 
   const { data: schedule, error: scheduleError } = useSWR(['schedule', queries], schedulesFetcher, {
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false
+    revalidateIfStale: false, // 古いデータがある場合に自動再検証
+    revalidateOnFocus: false, // ウィンドウがフォーカスされたときに自動的に再検証
+    revalidateOnReconnect: false, // ブラウザがネットワーク接続を回復すると自動的に再検証
+    revalidateOnMount: true // コンポーネントのマウント時に自動再検証
   });
   let scheduleList: TSchedule[] = [];
 

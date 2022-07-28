@@ -18,9 +18,9 @@ type Props = {
  */
 const ScheduleSummary: React.FC<Props> = ({ contentId }) => {
   const { data, error } = useSWR(['schedule', contentId], scheduleFetcher, {
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false
+    revalidateIfStale: false, // 古いデータがある場合に自動再検証
+    revalidateOnFocus: false, // ウィンドウがフォーカスされたときに自動的に再検証
+    revalidateOnReconnect: false // ブラウザがネットワーク接続を回復すると自動的に再検証
   });
 
   // 予定データの取得に失敗

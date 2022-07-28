@@ -46,11 +46,15 @@ const CalendarMonth: React.FC<Props> = props => {
   const selectedDate = React.useRef('');
   const selectedId = React.useRef('');
   let { data: now, error: nowError } = useSWR('/api/now', nowFetcher, {
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false
+    revalidateIfStale: false, // 古いデータがある場合に自動再検証
+    revalidateOnFocus: false, // ウィンドウがフォーカスされたときに自動的に再検証
+    revalidateOnReconnect: false // ブラウザがネットワーク接続を回復すると自動的に再検証
   });
+
+  // 年と月を引数に月カレンダーに必要な日付の配列を返却し7つずつ分割
+  // [[1,2,3,4,5,6,7], [8,9,10,11,12,13,17]...]の形式になる
   const calendarDataArray = arrayChunk(getMonthCalendarData(props.year, props.month), 7);
+
   const week = ['日', '月', '火', '水', '木', '金', '土'];
   const dispatch = useDispatch<AppDispatch>();
 
