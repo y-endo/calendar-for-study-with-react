@@ -8,6 +8,7 @@ import { useDispatch } from 'react-redux';
 
 import DefaultLayout from '~/components/layouts/Default';
 import ScheduleForm, { IScheduleFormInput } from '~/components/ScheduleForm';
+import Button from '~/components/Button';
 
 import { AppDispatch } from '~/stores';
 import { addMessage } from '~/stores/message';
@@ -81,6 +82,9 @@ const SchedulePage: NextPage | null = () => {
       </Head>
       <StyledFormContainer>
         <ScheduleForm disabled={isSubmitting} defaultValue={defaultValue} submitText="更新" submitCallback={submitCallback} />
+        <Button mt="30px" onClick={() => router.back()}>
+          戻る
+        </Button>
       </StyledFormContainer>
     </DefaultLayout>
   );
